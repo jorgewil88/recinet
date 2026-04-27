@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Recinet — Conectamos el ciclo del reciclaje</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#1D9E75;--green-light:#E1F5EE;--green-dark:#0F6E56;
+  --blue:#378ADD;--amber:#EF9F27;--purple:#7F77DD;--red:#DC2626;
+  --bg:#F4F7F4;--surface:#FFFFFF;--border:#E2E8E2;
+  --text:#1A2420;--text2:#5A6B65;--text3:#9AABA5;
+  --r:12px;--rs:8px;--rf:999px;
+  --font:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative}
+.screen{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;overflow:hidden}
+.screen.on{display:flex}
+
+/* AUTH */
+#s-auth{background:#fff;justify-content:flex-start;padding:36px 28px 28px;overflow-y:auto}
+.logo-wrap{text-align:center;margin-bottom:28px}
+.logo-box{width:68px;height:68px;border-radius:20px;background:var(--green);margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.logo-name{font-size:26px;font-weight:700;color:var(--text);letter-spacing:-.5px}
+.logo-sub{font-size:13px;color:var(--text2);margin-top:3px}
+.fld{margin-bottom:12px}
+.flbl{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block;letter-spacing:.4px;text-transform:uppercase}
+.finp{width:100%;height:42px;border:1.5px solid var(--border);border-radius:var(--rs);padding:0 13px;font-size:14px;color:var(--text);background:#fff;outline:none;font-family:var(--font);transition:border-color .15s}
+.finp:focus{border-color:var(--green)}
+.btn{width:100%;height:44px;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);transition:opacity .15s}
+.btn:active{opacity:.85}
+.btn-green{background:var(--green);color:#fff;margin-bottom:8px}
+.btn-border{background:#fff;color:var(--text);border:1.5px solid var(--border)!important;display:flex;align-items:center;justify-content:center;gap:8px}
+.div-row{display:flex;align-items:center;gap:8px;margin:12px 0}
+.div-line{flex:1;height:.5px;background:var(--border)}
+.div-txt{font-size:11px;color:var(--text3)}
+.tog{text-align:center;font-size:13px;color:var(--text2);margin-top:12px}
+.tog span{color:var(--green);font-weight:600;cursor:pointer}
+.roles-wrap{margin-top:14px;padding-top:14px;border-top:.5px solid var(--border)}
+.roles-lbl{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
+.roles-row{display:flex;gap:6px;flex-wrap:wrap}
+.rchip{padding:5px 13px;border-radius:var(--rf);font-size:12px;border:1.5px solid var(--border);color:var(--text2);cursor:pointer;background:#fff;transition:all .15s;font-family:var(--font);font-weight:500}
+.rchip.on{background:var(--green-light);border-color:var(--green);color:var(--green-dark);font-weight:600}
+#reg-form{display:none}
+
+/* TOPBAR */
+.tbar{padding:10px 14px;background:rgba(255,255,255,.97);border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:9px;flex-shrink:0;z-index:20}
+.tsearch{flex:1;height:36px;border-radius:var(--rf);border:1.5px solid var(--border);background:var(--bg);display:flex;align-items:center;padding:0 13px;gap:7px;font-size:13px;color:var(--text3)}
+.av{width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;cursor:pointer;border:2.5px solid var(--green-light);overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.app-brand{font-size:15px;font-weight:700;color:var(--green);letter-spacing:-.3px}
+
+/* ROL BAR */
+.rol-bar{padding:7px 10px;display:flex;gap:5px;flex-shrink:0;background:rgba(255,255,255,.93);border-bottom:.5px solid var(--border)}
+.rol-chip{padding:5px 0;border-radius:var(--rf);font-size:12px;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);font-weight:600;transition:all .15s;flex:1;text-align:center}
+.rol-chip.on-todo{background:#1a2420;color:#fff;border-color:#1a2420}
+.rol-chip.on-gen{background:var(--blue);color:#fff;border-color:var(--blue)}
+.rol-chip.on-rec{background:var(--green);color:#fff;border-color:var(--green)}
+.rol-chip.on-prod{background:var(--amber);color:#fff;border-color:var(--amber)}
+.rol-chip.on-comp{background:var(--purple);color:#fff;border-color:var(--purple)}
+
+/* MAP */
+.map-area{flex:1;display:flex;overflow:hidden;position:relative}
+.mat-sidebar{width:52px;flex-shrink:0;background:rgba(255,255,255,.95);border-right:.5px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:6px;z-index:10}
+.mat-lbl{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;text-align:center;line-height:1.2;padding:0 4px}
+.mat-btn{width:40px;height:40px;border-radius:var(--rs);border:1.5px solid var(--border);background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .15s}
+.mat-btn.on{border-color:var(--green);background:var(--green-light)}
+.mat-btn .mico{font-size:16px;line-height:1}
+.mat-btn .mtxt{font-size:9px;font-weight:600;color:var(--text2);line-height:1}
+.mat-btn.on .mtxt{color:var(--green-dark)}
+.mat-div{width:28px;height:.5px;background:var(--border);margin:2px 0}
+#map-canvas{flex:1;position:relative;overflow:hidden}
+#map-svg{width:100%;height:100%}
+.legend{position:absolute;bottom:70px;right:10px;display:flex;flex-direction:column;gap:4px;z-index:10}
+.leg-item{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.92);border-radius:var(--rf);padding:3px 9px;font-size:10px;color:var(--text2);border:.5px solid var(--border)}
+.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.fab{position:absolute;bottom:18px;right:14px;width:50px;height:50px;border-radius:50%;background:var(--green);color:#fff;font-size:26px;border:none;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center;font-family:var(--font);box-shadow:0 3px 12px rgba(29,158,117,.4)}
+.fab:active{transform:scale(.93)}
+
+/* SHEETS */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);z-index:30;display:none}
+.overlay.on{display:block}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:18px 18px 0 0;z-index:40;transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);max-height:88%;overflow-y:auto}
+.sheet.on{transform:translateY(0)}
+.handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0}
+.sbody{padding:14px 18px 32px}
+.ph{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:.5px solid var(--border)}
+.pav{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:700;flex-shrink:0}
+.pname{font-size:16px;font-weight:600;color:var(--text)}
+.pzone{font-size:12px;color:var(--text2);margin-top:2px}
+.isec{margin-bottom:12px}
+.ititle{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.mtags{display:flex;gap:5px;flex-wrap:wrap}
+.mtag{padding:3px 9px;border-radius:var(--rf);font-size:11px;font-weight:600;border:1.5px solid}
+.mtag-y{background:var(--green-light);color:var(--green-dark);border-color:var(--green)}
+.mtag-n{background:var(--bg);color:var(--text2);border-color:var(--border)}
+.cbts{display:flex;gap:8px;margin-top:16px}
+.wa-btn{flex:1;height:42px;border-radius:var(--rs);background:#25D366;color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.em-btn{flex:1;height:42px;border-radius:var(--rs);border:1.5px solid var(--border);background:#fff;color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font)}
+.pub-img{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:14px;display:block}
+.tomada-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--rf);background:#FEF2F2;border:1.5px solid #FCA5A5;color:var(--red);font-size:11px;font-weight:700;margin-bottom:12px}
+.btn-tomada{width:100%;height:40px;border-radius:var(--rs);border:1.5px solid #FCA5A5;background:#FEF2F2;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-tomada-ok{width:100%;height:40px;border-radius:var(--rs);border:1.5px solid var(--green);background:var(--green-light);color:var(--green-dark);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.reviews-section{margin-top:16px;padding-top:14px;border-top:.5px solid var(--border)}
+.reviews-avg{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.avg-num{font-size:22px;font-weight:700;color:var(--text)}
+.avg-count{font-size:12px;color:var(--text2)}
+.review-item{padding:10px 0;border-bottom:.5px solid var(--border)}
+.review-item:last-child{border-bottom:none}
+.review-top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.review-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0}
+.review-name{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.review-date{font-size:11px;color:var(--text3)}
+.review-stars{display:flex;gap:1px;margin-bottom:4px;padding-left:36px}
+.review-comment{font-size:12px;color:var(--text2);line-height:1.5;padding-left:36px}
+.write-review-btn{width:100%;height:40px;border-radius:var(--rs);border:1.5px solid var(--green);background:var(--green-light);color:var(--green-dark);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px}
+
+/* PUBLISH */
+.ptitle{font-size:17px;font-weight:600;color:var(--text);margin-bottom:3px}
+.psub{font-size:13px;color:var(--text2);margin-bottom:16px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.tcard{padding:11px;border-radius:var(--rs);border:1.5px solid var(--border);cursor:pointer;text-align:center;transition:all .15s}
+.tcard.on{border-color:var(--green);background:var(--green-light)}
+.tcard-ico{font-size:20px;margin-bottom:3px}
+.tcard-lbl{font-size:12px;font-weight:600;color:var(--text)}
+.tcard-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.tcard.on .tcard-lbl{color:var(--green-dark)}
+.msel{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;margin-bottom:12px}
+.fchip{padding:4px 12px;border-radius:var(--rf);font-size:12px;white-space:nowrap;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);font-weight:500;transition:all .15s}
+.fchip.on{background:var(--green);color:#fff;border-color:var(--green)}
+textarea.finp{height:72px;padding:10px 13px;resize:none}
+.freerow{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;margin-bottom:12px}
+.chkbox{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:12px;color:#fff}
+.chkbox.on{background:var(--green);border-color:var(--green)}
+.foto-upload-area{width:100%;height:100px;border-radius:10px;border:1.5px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;margin-bottom:12px;position:relative;overflow:hidden;background:var(--bg)}
+.foto-upload-area:hover{border-color:var(--green);background:var(--green-light)}
+
+/* PERFIL */
+#s-perfil{background:var(--bg)}
+.p-tbar{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:.5px solid var(--border);background:#fff;flex-shrink:0}
+.back{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.p-tabs{display:flex;background:#fff;border-bottom:.5px solid var(--border);flex-shrink:0}
+.p-tab{flex:1;padding:10px 4px;font-size:12px;font-weight:600;color:var(--text3);text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:var(--font);background:none;border-top:none;border-left:none;border-right:none}
+.p-tab.on{color:var(--green);border-bottom-color:var(--green)}
+.p-scroll{overflow-y:auto;flex:1}
+.ph2{padding:20px 18px;text-align:center;background:#fff;border-bottom:.5px solid var(--border)}
+.avatar-upload{position:relative;width:82px;margin:0 auto 12px;cursor:pointer}
+.pav2{width:82px;height:82px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;font-weight:700;border:3px solid var(--green-light);overflow:hidden}
+.pav2 img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.av-edit{position:absolute;bottom:2px;right:2px;width:22px;height:22px;border-radius:50%;background:var(--green);border:2px solid #fff;display:flex;align-items:center;justify-content:center}
+.pn2{font-size:19px;font-weight:600;color:var(--text)}
+.pz2{font-size:13px;color:var(--text2);margin-top:2px;margin-bottom:9px}
+.rbadges{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.rb{padding:3px 11px;border-radius:var(--rf);font-size:11px;font-weight:600}
+.rb-gen{background:#E6F1FB;color:#185FA5}.rb-rec{background:var(--green-light);color:var(--green-dark)}.rb-prod{background:#FAEEDA;color:#854F0B}.rb-comp{background:#EEEDFE;color:#534AB7}
+.impacto-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
+.imp-card{background:#fff;border-radius:12px;padding:14px 12px;border:.5px solid var(--border);text-align:center}
+.imp-icon{font-size:28px;margin-bottom:6px}
+.imp-num{font-size:22px;font-weight:700;color:var(--text)}
+.imp-unit{font-size:11px;color:var(--text2);margin-top:1px}
+.imp-lbl{font-size:12px;font-weight:600;color:var(--text2);margin-top:4px}
+.imp-banner{margin:16px 16px 0;background:var(--green-light);border-radius:12px;padding:14px 16px;border:.5px solid var(--green)}
+.prog-wrap{margin:0 16px 16px}
+.prog-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.prog-bar{height:8px;background:var(--border);border-radius:var(--rf);overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:var(--rf)}
+.hist-section{padding:16px}
+.hist-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:.5px solid var(--border)}
+.hist-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.hist-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hist-main{font-size:13px;font-weight:500;color:var(--text);flex:1}
+.hist-when{font-size:11px;color:var(--text3)}
+.hist-detail{font-size:12px;color:var(--text2);padding-left:18px}
+.esec{padding:16px 18px;background:#fff;border-bottom:.5px solid var(--border);margin-bottom:8px}
+.etitle{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
+.horarios-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.dia-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .15s}
+.dia-row.on{border-color:var(--green);background:var(--green-light)}
+.dia-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
+.dia-row.on .dia-check{background:var(--green);border-color:var(--green);color:#fff}
+.dia-label{font-size:12px;font-weight:600;color:var(--text)}
+.horario-inp{width:100%;height:36px;border:1.5px solid var(--border);border-radius:6px;padding:0 10px;font-size:13px;color:var(--text);background:#fff;outline:none;font-family:var(--font);margin-top:8px}
+.horario-inp:focus{border-color:var(--green)}
+.logout-area{padding:16px 18px 28px;background:#fff}
+.logout-btn{width:100%;height:44px;border-radius:var(--rs);border:1.5px solid #FCA5A5;background:#FEF2F2;color:var(--red);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* MODALS */
+.cal-wrap{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:80;display:none;align-items:flex-end}
+.cal-wrap.on{display:flex}
+.cal-sheet{background:#fff;border-radius:18px 18px 0 0;padding:20px 20px 32px;width:100%}
+.cal-handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.star-row{display:flex;gap:8px;margin-bottom:16px}
+.star-btn{width:44px;height:44px;border-radius:var(--rs);border:1.5px solid var(--border);background:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:var(--font)}
+.star-btn.on{background:#FAEEDA;border-color:var(--amber)}
+.modal-wrap{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:80;display:none;align-items:center;justify-content:center;padding:24px}
+.modal-wrap.on{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px 20px;width:100%;max-width:300px;text-align:center}
+.modal-icon{width:52px;height:52px;border-radius:50%;background:#FEF2F2;margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:20px}
+.modal-btns{display:flex;gap:8px}
+.modal-cancel{flex:1;height:42px;border-radius:var(--rs);border:1.5px solid var(--border);background:#fff;color:var(--text);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font)}
+.modal-confirm{flex:1;height:42px;border-radius:var(--rs);border:none;background:var(--red);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)}
+#toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#1a2420;color:#fff;padding:10px 20px;border-radius:var(--rf);font-size:13px;font-weight:500;z-index:999;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div class="screen on" id="s-auth">
+  <div class="logo-wrap">
+    <div class="logo-box">
+      <svg viewBox="0 0 36 36" fill="none" width="36" height="36">
+        <circle cx="18" cy="11" r="6" stroke="#fff" stroke-width="2.2"/>
+        <path d="M7 31c0-6.075 4.925-11 11-11s11 4.925 11 11" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M5 20Q18 13 31 20" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="logo-name">Recinet</div>
+    <div class="logo-sub">Conectamos el ciclo del reciclaje</div>
+  </div>
+  <div id="login-form">
+    <div class="fld"><label class="flbl">Email</label><input class="finp" id="l-email" type="email" placeholder="tu@email.com" autocomplete="email"></div>
+    <div class="fld"><label class="flbl">Contraseña</label><input class="finp" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn btn-green" onclick="doLogin()">Ingresar</button>
+    <div class="div-row"><div class="div-line"></div><div class="div-txt">o</div><div class="div-line"></div></div>
+    <button class="btn btn-border" onclick="doGoogleLogin()">
+      <svg width="17" height="17" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Continuar con Google
+    </button>
+    <div class="tog">¿No tenés cuenta? <span onclick="switchReg(true)">Registrate</span></div>
+  </div>
+  <div id="reg-form">
+    <div class="fld"><label class="flbl">Nombre completo</label><input class="finp" id="r-name" placeholder="Juan García" autocomplete="name"></div>
+    <div class="fld"><label class="flbl">Email</label><input class="finp" id="r-email" type="email" placeholder="tu@email.com"></div>
+    <div class="fld"><label class="flbl">Contraseña</label><input class="finp" id="r-pass" type="password" placeholder="Mínimo 6 caracteres"></div>
+    <div class="fld"><label class="flbl">Barrio / Zona</label><input class="finp" id="r-zona" placeholder="Ej: Palermo, CABA"></div>
+    <div class="roles-wrap">
+      <div class="roles-lbl">Tus roles (elegí uno o más)</div>
+      <div class="roles-row">
+        <button class="rchip" onclick="this.classList.toggle('on')">Generador</button>
+        <button class="rchip" onclick="this.classList.toggle('on')">Reciclador</button>
+        <button class="rchip" onclick="this.classList.toggle('on')">Productor</button>
+        <button class="rchip" onclick="this.classList.toggle('on')">Comprador</button>
+      </div>
+    </div>
+    <button class="btn btn-green" style="margin-top:14px" onclick="doRegister()">Crear cuenta</button>
+    <div class="tog">¿Ya tenés cuenta? <span onclick="switchReg(false)">Ingresá</span></div>
+  </div>
+</div>
+
+<!-- MAPA -->
+<div class="screen" id="s-mapa">
+  <div class="tbar">
+    <div class="app-brand">Recinet</div>
+    <div class="tsearch">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M9 9l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Buscá zona...
+    </div>
+    <div class="av" id="tav" onclick="goTo('perfil')">?</div>
+  </div>
+  <div class="rol-bar">
+    <button class="rol-chip on-todo" onclick="setRol('todo',this)">Todo</button>
+    <button class="rol-chip" onclick="setRol('generador',this)">Generador</button>
+    <button class="rol-chip" onclick="setRol('reciclador',this)">Reciclador</button>
+    <button class="rol-chip" onclick="setRol('productor',this)">Productor</button>
+    <button class="rol-chip" onclick="setRol('comprador',this)">Comprador</button>
+  </div>
+  <div class="map-area">
+    <div class="mat-sidebar">
+      <div class="mat-lbl">Mat.</div>
+      <button class="mat-btn on" onclick="setMat('todo',this)"><div class="mico">◉</div><div class="mtxt">Todo</div></button>
+      <div class="mat-div"></div>
+      <button class="mat-btn" onclick="setMat('papel',this)"><div class="mico">📄</div><div class="mtxt">Papel</div></button>
+      <button class="mat-btn" onclick="setMat('carton',this)"><div class="mico">📦</div><div class="mtxt">Cartón</div></button>
+      <button class="mat-btn" onclick="setMat('plastico',this)"><div class="mico">♻</div><div class="mtxt">Plást.</div></button>
+      <button class="mat-btn" onclick="setMat('organico',this)"><div class="mico">🌿</div><div class="mtxt">Org.</div></button>
+    </div>
+    <div id="map-canvas">
+      <svg id="map-svg" viewBox="0 0 580 500" preserveAspectRatio="xMidYMid meet">
+        <rect width="580" height="500" fill="#e8f0e4"/>
+        <g fill="#d4dfca" stroke="#c8d9bc" stroke-width="0.5">
+          <rect x="20" y="25" width="65" height="42" rx="2"/><rect x="100" y="25" width="52" height="42" rx="2"/><rect x="165" y="25" width="75" height="42" rx="2"/><rect x="252" y="25" width="58" height="42" rx="2"/><rect x="322" y="25" width="70" height="42" rx="2"/><rect x="404" y="25" width="60" height="42" rx="2"/><rect x="476" y="25" width="78" height="42" rx="2"/>
+          <rect x="20" y="92" width="58" height="52" rx="2"/><rect x="92" y="92" width="78" height="52" rx="2"/><rect x="183" y="92" width="60" height="52" rx="2"/><rect x="255" y="92" width="85" height="52" rx="2"/><rect x="352" y="92" width="52" height="52" rx="2"/><rect x="416" y="92" width="75" height="52" rx="2"/><rect x="503" y="92" width="52" height="52" rx="2"/>
+          <rect x="20" y="168" width="75" height="48" rx="2"/><rect x="108" y="168" width="60" height="48" rx="2"/><rect x="182" y="168" width="85" height="48" rx="2"/><rect x="279" y="168" width="66" height="48" rx="2"/><rect x="357" y="168" width="75" height="48" rx="2"/><rect x="444" y="168" width="62" height="48" rx="2"/>
+          <rect x="20" y="240" width="60" height="52" rx="2"/><rect x="94" y="240" width="75" height="52" rx="2"/><rect x="182" y="240" width="65" height="52" rx="2"/><rect x="260" y="240" width="80" height="52" rx="2"/><rect x="352" y="240" width="58" height="52" rx="2"/><rect x="422" y="240" width="85" height="52" rx="2"/>
+          <rect x="20" y="316" width="70" height="48" rx="2"/><rect x="104" y="316" width="65" height="48" rx="2"/><rect x="182" y="316" width="80" height="48" rx="2"/><rect x="274" y="316" width="60" height="48" rx="2"/><rect x="346" y="316" width="76" height="48" rx="2"/><rect x="434" y="316" width="66" height="48" rx="2"/>
+          <rect x="20" y="388" width="75" height="58" rx="2"/><rect x="108" y="388" width="60" height="58" rx="2"/><rect x="182" y="388" width="85" height="58" rx="2"/><rect x="280" y="388" width="70" height="58" rx="2"/><rect x="362" y="388" width="58" height="58" rx="2"/><rect x="432" y="388" width="80" height="58" rx="2"/>
+        </g>
+        <g stroke="#fff" fill="none">
+          <line x1="0" y1="82" x2="580" y2="82" stroke-width="7"/><line x1="0" y1="158" x2="580" y2="158" stroke-width="7"/><line x1="0" y1="232" x2="580" y2="232" stroke-width="7"/><line x1="0" y1="308" x2="580" y2="308" stroke-width="7"/><line x1="0" y1="380" x2="580" y2="380" stroke-width="7"/>
+          <line x1="88" y1="0" x2="88" y2="500" stroke-width="7"/><line x1="178" y1="0" x2="178" y2="500" stroke-width="7"/><line x1="348" y1="0" x2="348" y2="500" stroke-width="7"/><line x1="418" y1="0" x2="418" y2="500" stroke-width="7"/>
+          <line x1="136" y1="0" x2="136" y2="500" stroke-width="2" stroke="#eaf3e0"/><line x1="262" y1="0" x2="262" y2="500" stroke-width="2" stroke="#eaf3e0"/>
+        </g>
+        <g font-size="9" fill="#9aaba5" text-anchor="middle" font-family="system-ui">
+          <text x="48" y="136">Palermo</text><text x="218" y="136">Recoleta</text><text x="382" y="136">Belgrano</text>
+          <text x="48" y="278">Flores</text><text x="298" y="278">San Telmo</text><text x="468" y="278">Boedo</text>
+          <text x="136" y="440">Caballito</text><text x="395" y="440">Barracas</text>
+        </g>
+        <g id="pins-layer"></g>
+      </svg>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#1D9E75"></div>Reciclador</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#378ADD"></div>Generador</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#EF9F27"></div>Productor</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#7F77DD"></div>Comprador</div>
+      </div>
+      <button class="fab" onclick="openSheet('pub')">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERFIL -->
+<div class="screen" id="s-perfil">
+  <div class="p-tbar">
+    <button class="back" onclick="goTo('mapa')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div style="font-size:15px;font-weight:600;color:var(--text)">Mi perfil · Recinet</div>
+  </div>
+  <div class="p-tabs">
+    <button class="p-tab on" onclick="showTab('impacto',this)">Impacto</button>
+    <button class="p-tab" onclick="showTab('historial',this)">Historial</button>
+    <button class="p-tab" onclick="showTab('editar',this)">Editar</button>
+  </div>
+  <div class="p-scroll">
+    <div class="ph2">
+      <div class="avatar-upload" onclick="document.getElementById('avatar-input').click()">
+        <div class="pav2" id="pav-big">?</div>
+        <div class="av-edit"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="handleAvatar(this)">
+      <div class="pn2" id="pn-big">—</div>
+      <div class="pz2" id="pz-big">—</div>
+      <div class="rbadges" id="rbadges"></div>
+    </div>
+    <div id="tab-impacto">
+      <div class="imp-banner"><div style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:4px">Tu huella verde en Recinet 🌱</div><div id="imp-banner-txt" style="font-size:12px;color:#1D9E75;line-height:1.5">Cada kg que reciclás evita que llegue al relleno sanitario.</div></div>
+      <div class="impacto-grid">
+        <div class="imp-card"><div class="imp-icon">♻️</div><div class="imp-num" id="imp-kg">0</div><div class="imp-unit">kg reciclados</div><div class="imp-lbl">material rescatado</div></div>
+        <div class="imp-card"><div class="imp-icon">🌳</div><div class="imp-num" id="imp-co2">0</div><div class="imp-unit">kg de CO₂</div><div class="imp-lbl">evitados</div></div>
+        <div class="imp-card"><div class="imp-icon">🤝</div><div class="imp-num" id="imp-con">0</div><div class="imp-unit">conexiones</div><div class="imp-lbl">intercambios</div></div>
+        <div class="imp-card"><div class="imp-icon">⭐</div><div class="imp-num" id="imp-rat">—</div><div class="imp-unit">tu puntaje</div><div class="imp-lbl">promedio recibido</div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span style="font-size:12px;font-weight:600;color:var(--text)">Nivel: <span id="nivel-txt">Semilla</span></span><span style="font-size:12px;color:var(--text2)"><span id="nivel-kg">0</span>/50 kg → siguiente</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div id="tab-historial" style="display:none">
+      <div class="hist-section"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Actividad reciente</div><div id="historial-list"></div></div>
+    </div>
+    <div id="tab-editar" style="display:none">
+      <div class="esec" style="margin-top:8px">
+        <div class="etitle">Datos personales</div>
+        <div class="fld"><label class="flbl">Nombre completo</label><input class="finp" id="e-name" placeholder="Tu nombre"></div>
+        <div class="fld"><label class="flbl">Barrio / Zona</label><input class="finp" id="e-zona" placeholder="Ej: Palermo, CABA"></div>
+        <div class="fld"><label class="flbl">Materiales que manejás</label>
+          <div class="msel" id="e-mats" style="margin-top:6px">
+            <button class="fchip" onclick="this.classList.toggle('on')">Papel</button>
+            <button class="fchip" onclick="this.classList.toggle('on')">Cartón</button>
+            <button class="fchip" onclick="this.classList.toggle('on')">Plástico</button>
+            <button class="fchip" onclick="this.classList.toggle('on')">Orgánico</button>
+          </div>
+        </div>
+        <button class="btn btn-green" onclick="saveProfile()">Guardar datos</button>
+      </div>
+      <div class="esec">
+        <div class="etitle">Horarios de atención</div>
+        <div class="horarios-grid" id="dias-grid">
+          <div class="dia-row" onclick="toggleDia(this)"><div class="dia-check"></div><div class="dia-label">Lunes</div></div>
+          <div class="dia-row" onclick="toggleDia(this)"><div class="dia-check"></div><div class="dia-label">Martes</div></div>
+          <div class="dia-row" onclick="toggleDia(this)"><div class="dia-check"></div><div class="dia-label">Miércoles</div></div>
+          <div class="dia-row" onclick="toggleDia(this)"><div class="dia-check"></div><div class="dia-label">Jueves</div></div>
+          <div class="dia-row" onclick="toggleDia(this)"><div class="dia-check"></div><div class="dia-label">Viernes</div></div>
+          <div class="dia-row" onclick="toggleDia(this)"><div class="dia-check"></div><div class="dia-label">Sábado</div></div>
+        </div>
+        <input class="horario-inp" id="horario-inp" placeholder="Ej: 9:00 a 17:00 hs">
+        <button class="btn btn-green" style="margin-top:10px" onclick="saveHorario()">Guardar horario</button>
+      </div>
+      <div class="logout-area">
+        <button class="logout-btn" onclick="showLogout()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round"/><path d="M10 11l3-3-3-3" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="13" y1="8" x2="6" y2="8" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeSheets()"></div>
+
+<!-- SHEET: Punto -->
+<div class="sheet" id="sheet-point">
+  <div class="handle"></div>
+  <div class="sbody">
+    <div id="pt-foto-wrap"></div>
+    <div id="pt-tomada-badge"></div>
+    <div class="ph">
+      <div class="pav" id="pt-av">RC</div>
+      <div><div class="pname" id="pt-nm">—</div><div class="pzone" id="pt-zn">—</div><div id="pt-stars" style="display:flex;gap:1px;align-items:center;margin-top:3px"></div></div>
+    </div>
+    <div class="isec"><div class="ititle">Materiales</div><div class="mtags" id="pt-mats"></div></div>
+    <div class="isec"><div class="ititle">Descripción</div><div id="pt-desc" style="font-size:13px;color:var(--text2);line-height:1.5"></div></div>
+    <div class="isec" id="pt-hor-sec" style="display:none"><div class="ititle">Horarios</div><div id="pt-hor" style="font-size:13px;color:var(--text2)"></div></div>
+    <div class="isec"><div class="ititle">Precio / condición</div><div id="pt-price" style="font-size:14px;font-weight:600;color:var(--text)"></div></div>
+    <div id="pt-tomada-btn"></div>
+    <div class="cbts" id="pt-cbts"><button class="wa-btn" onclick="contactWA()">WhatsApp</button><button class="em-btn" onclick="contactEmail()">Email</button></div>
+    <div class="reviews-section">
+      <div class="reviews-avg"><div class="avg-num" id="rv-avg">—</div><div><div id="rv-avg-stars" style="display:flex;gap:1px"></div><div class="avg-count" id="rv-count">0 reseñas</div></div></div>
+      <div id="rv-list"></div>
+      <button class="write-review-btn" onclick="openCalModal()">✏️ Escribir reseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET: Publicar -->
+<div class="sheet" id="sheet-pub">
+  <div class="handle"></div>
+  <div class="sbody">
+    <div class="ptitle">Nueva publicación</div>
+    <div class="psub">¿Qué querés poner en el mapa?</div>
+    <div class="ititle" style="margin-bottom:7px">Tipo</div>
+    <div class="tgrid" id="tgrid">
+      <div class="tcard on" data-t="generador" onclick="selType(this)"><div class="tcard-ico">📦</div><div class="tcard-lbl">Generador</div><div class="tcard-sub">Tengo material</div></div>
+      <div class="tcard" data-t="reciclador" onclick="selType(this)"><div class="tcard-ico">♻️</div><div class="tcard-lbl">Reciclador</div><div class="tcard-sub">Proceso material</div></div>
+      <div class="tcard" data-t="productor" onclick="selType(this)"><div class="tcard-ico">🛍️</div><div class="tcard-lbl">Productor</div><div class="tcard-sub">Vendo producto</div></div>
+      <div class="tcard" data-t="comprador" onclick="selType(this)"><div class="tcard-ico">🛒</div><div class="tcard-lbl">Comprador</div><div class="tcard-sub">Busco material</div></div>
+    </div>
+    <div id="foto-field">
+      <label class="flbl">Foto del material / producto</label>
+      <div class="foto-upload-area" id="foto-drop" onclick="document.getElementById('pub-foto-inp').click()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="var(--text3)" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="var(--text3)"/><path d="M3 15l5-5 4 4 3-3 6 6" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-size:12px;font-weight:600;color:var(--text2)">Tocá para subir foto</div>
+        <div style="font-size:11px;color:var(--text3)">JPG, PNG — opcional</div>
+      </div>
+      <input type="file" id="pub-foto-inp" accept="image/*" style="display:none" onchange="handlePubFoto(this)">
+    </div>
+    <div class="fld"><label class="flbl">Materiales</label>
+      <div class="msel" id="pub-mats">
+        <button class="fchip" onclick="this.classList.toggle('on')">Papel</button>
+        <button class="fchip" onclick="this.classList.toggle('on')">Cartón</button>
+        <button class="fchip" onclick="this.classList.toggle('on')">Plástico</button>
+        <button class="fchip" onclick="this.classList.toggle('on')">Orgánico</button>
+      </div>
+    </div>
+    <div class="fld"><label class="flbl">Descripción</label><textarea class="finp" id="pub-desc" placeholder="Describí qué tenés o qué buscás..."></textarea></div>
+    <div class="freerow" onclick="toggleFree()"><div class="chkbox" id="freebox"></div><div><div style="font-size:13px;font-weight:500;color:var(--text)">Es gratis / donación</div><div style="font-size:11px;color:var(--text2)">Sin costo para quien retira</div></div></div>
+    <div class="fld" id="price-fld"><label class="flbl">Precio por kg (ARS)</label><input class="finp" id="pub-price" type="number" placeholder="Ej: 150"></div>
+    <div class="fld"><label class="flbl">Tu WhatsApp (sin 0 ni 15)</label><input class="finp" id="pub-phone" type="tel" placeholder="1155556677"></div>
+    <button class="btn btn-green" onclick="doPublish()" style="margin-top:6px">Publicar en el mapa</button>
+  </div>
+</div>
+
+<!-- MODAL: Reseña -->
+<div class="cal-wrap" id="cal-modal">
+  <div class="cal-sheet">
+    <div class="cal-handle"></div>
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Escribí una reseña</div>
+    <div id="cal-sub" style="font-size:13px;color:var(--text2);margin-bottom:16px">¿Cómo fue tu experiencia?</div>
+    <div class="star-row">
+      <button class="star-btn" data-v="1" onclick="setStar(1)">★</button>
+      <button class="star-btn" data-v="2" onclick="setStar(2)">★</button>
+      <button class="star-btn" data-v="3" onclick="setStar(3)">★</button>
+      <button class="star-btn" data-v="4" onclick="setStar(4)">★</button>
+      <button class="star-btn" data-v="5" onclick="setStar(5)">★</button>
+    </div>
+    <div class="fld"><label class="flbl">Comentario</label><textarea class="finp" id="cal-comment" placeholder="Ej: Muy buen trato, material en perfecto estado."></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="modal-cancel" onclick="closeCalModal()">Cancelar</button>
+      <button class="btn btn-green" style="flex:1" onclick="submitReview()">Publicar reseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Logout -->
+<div class="modal-wrap" id="logout-modal">
+  <div class="modal">
+    <div class="modal-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#DC2626" stroke-width="2" stroke-linecap="round"/><polyline points="16 17 21 12 16 7" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="21" y1="12" x2="9" y2="12" stroke="#DC2626" stroke-width="2" stroke-linecap="round"/></svg></div>
+    <div class="modal-title">¿Cerrás sesión?</div>
+    <div class="modal-sub">Vas a salir de tu cuenta en Recinet. Podés volver cuando quieras.</div>
+    <div class="modal-btns"><button class="modal-cancel" onclick="hideLogout()">Cancelar</button><button class="modal-confirm" onclick="doLogout()">Cerrar sesión</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════
+const SUPABASE_URL = 'https://kivfgmfxumvmbzmghcdm.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_2C8AEqnLymAlLREXaDCWjA_3_nY1Q_n'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+// ═══════════════════════════════
+// ESTADO
+// ═══════════════════════════════
+const C={reciclador:'#1D9E75',generador:'#378ADD',productor:'#EF9F27',comprador:'#7F77DD'}
+const RL={generador:'Generador',reciclador:'Reciclador',productor:'Productor',comprador:'Comprador'}
+const RC={generador:'rb-gen',reciclador:'rb-rec',productor:'rb-prod',comprador:'rb-comp'}
+const ROL_CLS={todo:'on-todo',generador:'on-gen',reciclador:'on-rec',productor:'on-prod',comprador:'on-comp'}
+
+// Coordenadas SVG para lat/lng de CABA
+const LAT_MIN=-34.70, LAT_MAX=-34.54, LNG_MIN=-58.53, LNG_MAX=-58.33
+function latlng2svg(lat,lng){
+  const sx=((lng-LNG_MIN)/(LNG_MAX-LNG_MIN))*580
+  const sy=((lat-LAT_MAX)/(LAT_MIN-LAT_MAX))*500
+  return {sx:Math.max(20,Math.min(560,sx)), sy:Math.max(20,Math.min(480,sy))}
+}
+
+let user=null, profile=null
+let rolFilter='todo', matFilter='todo', pubType='generador', isFree=false, sel=null, starVal=0, pubFotoData=null
+let DATA=[], REVIEWS={}, HISTORIAL=[]
+
+// Datos demo que se muestran si no hay publicaciones reales
+const DEMO=[
+  {id:'d1',tipo:'reciclador',nombre:'Reciclar+ SRL',zona:'Palermo',materiales:['papel','carton'],descripcion:'Compramos papel y cartón limpio. Retiro a domicilio para más de 5kg.',precio:'$150/kg papel · $80/kg cartón',telefono:'1155001234',email:'info@reciclarplus.com',horario:'Lun a Vie · 9 a 17 hs',foto_url:null,tomada:false,lat:-34.590,lng:-58.414,rating:4.8,hist:['Recibió 20kg de papel · 3 días','Recibió 8kg cartón · 1 semana']},
+  {id:'d2',tipo:'generador',nombre:'Ana Martínez',zona:'Flores',materiales:['plastico','carton'],descripcion:'Cajas de cartón y botellas PET. Doy gratis, retiro acordado.',precio:'Gratis',telefono:'1166009988',email:'ana@gmail.com',horario:'',foto_url:null,tomada:false,lat:-34.628,lng:-58.463,rating:4.5,hist:['Publicó 15 cajas · 2 días']},
+  {id:'d3',tipo:'productor',nombre:'La Billetera Verde',zona:'San Telmo',materiales:['papel','carton'],descripcion:'Fabricamos billeteras 100% papel reciclado artesanal.',precio:'Billeteras desde $3.500',telefono:'1177003322',email:'verde@billetera.com',horario:'Mar a Sáb · 10 a 18 hs',foto_url:null,tomada:false,lat:-34.620,lng:-58.368,rating:4.9,hist:['Vendió 12 billeteras · 1 semana']},
+  {id:'d4',tipo:'reciclador',nombre:'EcoTaller Boedo',zona:'Boedo',materiales:['organico','papel'],descripcion:'Compostaje comunitario y procesamiento de papel.',precio:'Gratis · donación bienvenida',telefono:'1188004455',email:'eco@boedo.com',horario:'Lun, Mié, Vie · 8 a 13 hs',foto_url:null,tomada:false,lat:-34.640,lng:-58.425,rating:4.7,hist:['Procesó 40kg orgánico · 4 días']},
+  {id:'d5',tipo:'comprador',nombre:'Sofía Reyes',zona:'Villa Crespo',materiales:['papel','plastico'],descripcion:'Busco papel y plástico reciclado para proyecto escolar.',precio:'Hasta $200/kg',telefono:'1199005566',email:'sofia@edu.com',horario:'',foto_url:null,tomada:false,lat:-34.599,lng:-58.442,rating:4.3,hist:[]},
+  {id:'d6',tipo:'generador',nombre:'Librería El Libro',zona:'Belgrano',materiales:['papel'],descripcion:'Periódicos y revistas viejas. Gran cantidad disponible.',precio:'Gratis',telefono:'1100116677',email:'libreria@libro.com',horario:'Lun a Sáb · 9 a 20 hs',foto_url:null,tomada:false,lat:-34.558,lng:-58.450,rating:4.6,hist:['Publicó 30kg revistas · 1 día']},
+  {id:'d7',tipo:'productor',nombre:'Muebles Renacidos',zona:'Mataderos',materiales:['carton','plastico'],descripcion:'Muebles y accesorios hechos con material 100% reciclado.',precio:'Silla desde $8.000',telefono:'1111227788',email:'info@muebles.com',horario:'Lun a Vie · 10 a 17 hs',foto_url:null,tomada:false,lat:-34.662,lng:-58.513,rating:4.4,hist:[]},
+]
+
+// ═══════════════════════════════
+// UTILS
+// ═══════════════════════════════
+function ini(n){return(n||'?').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?'}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2500)}
+function goTo(s){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'));document.getElementById('s-'+s).classList.add('on');if(s==='perfil')fillPerfil()}
+function switchReg(show){document.getElementById('login-form').style.display=show?'none':'block';document.getElementById('reg-form').style.display=show?'block':'none'}
+function openSheet(id){document.getElementById('overlay').classList.add('on');document.getElementById('sheet-'+id).classList.add('on')}
+function closeSheets(){document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));document.getElementById('overlay').classList.remove('on')}
+function showLogout(){document.getElementById('logout-modal').classList.add('on')}
+function hideLogout(){document.getElementById('logout-modal').classList.remove('on')}
+function openCalModal(){starVal=0;document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('on'));document.getElementById('cal-comment').value='';document.getElementById('cal-modal').classList.add('on')}
+function closeCalModal(){document.getElementById('cal-modal').classList.remove('on')}
+function setStar(v){starVal=v;document.querySelectorAll('.star-btn').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.v)<=v))}
+function showTab(id,el){['impacto','historial','editar'].forEach(t=>document.getElementById('tab-'+t).style.display=t===id?'block':'none');document.querySelectorAll('.p-tab').forEach(b=>b.classList.remove('on'));el.classList.add('on')}
+function toggleDia(el){el.classList.toggle('on');el.querySelector('.dia-check').textContent=el.classList.contains('on')?'✓':''}
+
+// ═══════════════════════════════
+// AUTH
+// ═══════════════════════════════
+async function doLogin(){
+  const e=document.getElementById('l-email').value.trim(),p=document.getElementById('l-pass').value
+  if(!e||!p){toast('Completá email y contraseña');return}
+  toast('Ingresando...')
+  const {data,error}=await sb.auth.signInWithPassword({email:e,password:p})
+  if(error){toast('Error: '+error.message);return}
+  user=data.user;await loadProfile();initApp()
+}
+
+async function doGoogleLogin(){
+  const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}})
+  if(error) toast('Error: '+error.message)
+}
+
+async function doRegister(){
+  const n=document.getElementById('r-name').value.trim(),e=document.getElementById('r-email').value.trim()
+  const p=document.getElementById('r-pass').value,z=document.getElementById('r-zona').value.trim()
+  const roles=[...document.querySelectorAll('.rchip.on')].map(c=>c.textContent.toLowerCase())
+  if(!n||!e||!p){toast('Completá todos los campos');return}
+  if(!roles.length){toast('Elegí al menos un rol');return}
+  toast('Creando cuenta...')
+  const {data,error}=await sb.auth.signUp({email:e,password:p})
+  if(error){toast('Error: '+error.message);return}
+  user=data.user
+  await sb.from('profiles').upsert({id:user.id,nombre:n,zona:z||'CABA',roles,materiales:[],horarios:[],horario_txt:''})
+  await loadProfile();initApp()
+  toast('¡Bienvenido/a, '+n.split(' ')[0]+'!')
+}
+
+async function doLogout(){
+  hideLogout();await sb.auth.signOut();user=null;profile=null
+  document.getElementById('l-email').value='';document.getElementById('l-pass').value=''
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'))
+  document.getElementById('s-auth').classList.add('on')
+  document.getElementById('login-form').style.display='block';document.getElementById('reg-form').style.display='none'
+  toast('Sesión cerrada')
+}
+
+async function loadProfile(){
+  if(!user) return
+  const {data}=await sb.from('profiles').select('*').eq('id',user.id).single()
+  if(data) profile=data
+  else{
+    await sb.from('profiles').insert({id:user.id,nombre:user.email.split('@')[0],zona:'CABA',roles:[],materiales:[],horarios:[],horario_txt:''})
+    const {data:d2}=await sb.from('profiles').select('*').eq('id',user.id).single()
+    profile=d2
+  }
+}
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+async function initApp(){
+  updateAvatar()
+  await loadPublications()
+  goTo('mapa')
+  toast('¡Bienvenido/a a Recinet!')
+}
+
+function updateAvatar(){
+  const tav=document.getElementById('tav'),big=document.getElementById('pav-big')
+  const nombre=profile?.nombre||user?.email||'?'
+  const foto=profile?.foto_url
+  if(foto){tav.innerHTML=`<img src="${foto}">`;big.innerHTML=`<img src="${foto}">`}
+  else{tav.textContent=ini(nombre);big.textContent=ini(nombre);big.style.background='#1D9E75'}
+}
+
+function handleAvatar(input){
+  if(!input.files||!input.files[0]) return
+  const r=new FileReader();r.onload=async e=>{
+    profile.foto_url=e.target.result
+    if(user) await sb.from('profiles').update({foto_url:e.target.result}).eq('id',user.id)
+    updateAvatar();toast('¡Foto actualizada!')
+  };r.readAsDataURL(input.files[0])
+}
+
+function handlePubFoto(input){
+  if(!input.files||!input.files[0]) return
+  const r=new FileReader();r.onload=e=>{
+    pubFotoData=e.target.result
+    document.getElementById('foto-drop').innerHTML=`<img src="${pubFotoData}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:9px">`
+    toast('Foto cargada')
+  };r.readAsDataURL(input.files[0])
+}
+
+// ═══════════════════════════════
+// PUBLICACIONES
+// ═══════════════════════════════
+async function loadPublications(){
+  const {data}=await sb.from('publications').select('*')
+  DATA = (data&&data.length>0) ? data : DEMO
+  renderPins()
+}
+
+function renderPins(){
+  const layer=document.getElementById('pins-layer');layer.innerHTML=''
+  DATA.filter(d=>(rolFilter==='todo'||d.tipo===rolFilter)&&(matFilter==='todo'||(d.materiales||[]).includes(matFilter))).forEach(d=>{
+    const c=d.tomada?'#aaa':(C[d.tipo]||'#888')
+    let sx,sy
+    if(d.lat&&d.lng){const pos=latlng2svg(d.lat,d.lng);sx=pos.sx;sy=pos.sy}
+    else{sx=d.sx||200;sy=d.sy||200}
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g')
+    g.setAttribute('cursor','pointer')
+    g.innerHTML=`<circle cx="${sx}" cy="${sy}" r="14" fill="${c}" stroke="white" stroke-width="2.5" opacity="${d.tomada?.5:1}"/><circle cx="${sx}" cy="${sy}" r="5" fill="white" opacity="${d.tomada?.4:.9}"/>`
+    g.addEventListener('click',()=>openPoint(d));layer.appendChild(g)
+  })
+}
+
+function setRol(f,el){rolFilter=f;document.querySelectorAll('.rol-chip').forEach(c=>c.className='rol-chip');el.classList.add(ROL_CLS[f]||'on-todo');renderPins()}
+function setMat(f,el){matFilter=f;document.querySelectorAll('.mat-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderPins()}
+
+async function openPoint(d){
+  sel=d;const c=C[d.tipo]||'#888'
+  document.getElementById('pt-foto-wrap').innerHTML=d.foto_url?`<img src="${d.foto_url}" class="pub-img">`:'';
+  document.getElementById('pt-tomada-badge').innerHTML=d.tomada?`<div class="tomada-badge">✓ Material ya tomado</div>`:''
+  document.getElementById('pt-av').style.background=c;document.getElementById('pt-av').textContent=ini(d.nombre||d.profiles?.nombre)
+  document.getElementById('pt-nm').textContent=d.nombre||d.profiles?.nombre||'—'
+  document.getElementById('pt-zn').textContent=(d.zona||'—')+' · '+(RL[d.tipo]||d.tipo)
+  const r=d.rating||(d.rating_avg)||4.5
+  document.getElementById('pt-stars').innerHTML=[1,2,3,4,5].map(i=>`<span style="font-size:13px;color:${i<=Math.round(r)?'#EF9F27':'#ddd'}">${i<=Math.round(r)?'★':'☆'}</span>`).join('')+`<span style="font-size:11px;color:var(--text2);margin-left:3px">${parseFloat(r).toFixed(1)}</span>`
+  document.getElementById('pt-mats').innerHTML=['papel','carton','plastico','organico'].map(m=>`<span class="mtag ${(d.materiales||[]).includes(m)?'mtag-y':'mtag-n'}">${m.charAt(0).toUpperCase()+m.slice(1)}</span>`).join('')
+  document.getElementById('pt-desc').textContent=d.descripcion||'—'
+  const hs=document.getElementById('pt-hor-sec')
+  if(d.horario){hs.style.display='block';document.getElementById('pt-hor').textContent=d.horario}else{hs.style.display='none'}
+  document.getElementById('pt-price').textContent=d.precio||'—'
+  const esPropio=user&&(d.user_id===user.id||d.nombre===profile?.nombre)
+  const tbw=document.getElementById('pt-tomada-btn')
+  if(esPropio&&!d.tomada) tbw.innerHTML=`<button class="btn-tomada" onclick="marcarTomada('${d.id}')">✓ Marcar como "ya tomada"</button>`
+  else if(esPropio&&d.tomada) tbw.innerHTML=`<button class="btn-tomada-ok" onclick="marcarDisponible('${d.id}')">Marcar como disponible</button>`
+  else tbw.innerHTML=''
+  document.getElementById('pt-cbts').style.display=d.tomada?'none':'flex'
+  await loadReviews(d)
+  document.getElementById('cal-sub').textContent='¿Cómo fue tu experiencia con '+(d.nombre||'').split(' ')[0]+'?'
+  openSheet('point')
+}
+
+async function loadReviews(d){
+  let reviews=[]
+  if(!String(d.id).startsWith('d')){
+    const {data}=await sb.from('reviews').select('*').eq('publication_id',d.id).order('created_at',{ascending:false})
+    reviews=data||[]
+  } else { reviews=REVIEWS[d.id]||[] }
+  const avg=reviews.length?(reviews.reduce((s,r)=>s+(r.stars||0),0)/reviews.length).toFixed(1):(d.rating||4.5).toFixed(1)
+  document.getElementById('rv-avg').textContent=avg
+  document.getElementById('rv-avg-stars').innerHTML=[1,2,3,4,5].map(i=>`<span style="font-size:14px;color:${i<=Math.round(avg)?'#EF9F27':'#ddd'}">${i<=Math.round(avg)?'★':'☆'}</span>`).join('')
+  document.getElementById('rv-count').textContent=reviews.length+(reviews.length===1?' reseña':' reseñas')
+  document.getElementById('rv-list').innerHTML=reviews.map(rv=>`
+    <div class="review-item">
+      <div class="review-top"><div class="review-av" style="background:${C.generador}">${ini(rv.reviewer_nombre||'?')}</div><div class="review-name">${rv.reviewer_nombre||'Anónimo'}</div><div class="review-date">${rv.created_at?new Date(rv.created_at).toLocaleDateString('es-AR'):'Hoy'}</div></div>
+      <div class="review-stars">${[1,2,3,4,5].map(i=>`<span style="font-size:13px;color:${i<=(rv.stars||0)?'#EF9F27':'#ddd'}">${i<=(rv.stars||0)?'★':'☆'}</span>`).join('')}</div>
+      <div class="review-comment">${rv.comment||''}</div>
+    </div>`).join('')||'<div style="font-size:13px;color:var(--text3);padding:8px 0">Todavía no hay reseñas. ¡Sé el primero!</div>'
+}
+
+async function submitReview(){
+  if(!starVal){toast('Elegí una cantidad de estrellas');return}
+  if(!sel) return
+  const comment=document.getElementById('cal-comment').value.trim()
+  const nombre=profile?.nombre||user?.email||'Anónimo'
+  if(!String(sel.id).startsWith('d')&&user){
+    await sb.from('reviews').insert({publication_id:sel.id,reviewer_id:user.id,reviewer_nombre:nombre,stars:starVal,comment})
+  } else {
+    if(!REVIEWS[sel.id]) REVIEWS[sel.id]=[]
+    REVIEWS[sel.id].unshift({reviewer_nombre:nombre,stars:starVal,comment,created_at:new Date().toISOString()})
+  }
+  closeCalModal();await loadReviews(sel);toast('¡Reseña publicada!')
+}
+
+async function marcarTomada(id){
+  const d=DATA.find(x=>String(x.id)===String(id));if(!d) return
+  d.tomada=true
+  if(!String(id).startsWith('d')) await sb.from('publications').update({tomada:true}).eq('id',id)
+  renderPins();openPoint(d);toast('Publicación marcada como tomada')
+}
+async function marcarDisponible(id){
+  const d=DATA.find(x=>String(x.id)===String(id));if(!d) return
+  d.tomada=false
+  if(!String(id).startsWith('d')) await sb.from('publications').update({tomada:false}).eq('id',id)
+  renderPins();openPoint(d);toast('Publicación disponible nuevamente')
+}
+
+function contactWA(){
+  const tel=sel?.telefono||sel?.telefono||''
+  const nombre=(sel?.nombre||'').split(' ')[0]
+  const msg=encodeURIComponent(`Hola ${nombre}! Te contacto desde Recinet.`)
+  if(tel) window.open(`https://wa.me/54${tel}?text=${msg}`)
+  else toast('Este usuario no cargó su WhatsApp')
+}
+function contactEmail(){
+  const email=sel?.email||''
+  if(email) window.open(`mailto:${email}?subject=Contacto desde Recinet`)
+  else toast('Este usuario no cargó su email')
+}
+
+// ═══════════════════════════════
+// PUBLICAR
+// ═══════════════════════════════
+function selType(el){document.querySelectorAll('#tgrid .tcard').forEach(c=>c.classList.remove('on'));el.classList.add('on');pubType=el.dataset.t;document.getElementById('foto-field').style.display=(pubType==='productor'||pubType==='generador')?'block':'none'}
+function toggleFree(){isFree=!isFree;document.getElementById('freebox').classList.toggle('on',isFree);document.getElementById('freebox').textContent=isFree?'✓':'';document.getElementById('price-fld').style.display=isFree?'none':'block'}
+
+async function doPublish(){
+  const mats=[...document.querySelectorAll('#pub-mats .fchip.on')].map(c=>c.textContent.toLowerCase())
+  const desc=document.getElementById('pub-desc').value.trim(),price=document.getElementById('pub-price').value.trim(),phone=document.getElementById('pub-phone').value.trim()
+  if(!desc){toast('Escribí una descripción');return}
+  if(!mats.length){toast('Elegí al menos un material');return}
+  const nombre=profile?.nombre||user?.email||'Usuario'
+  const zona=profile?.zona||'CABA'
+  const horario=profile?.horarios?.length?(profile.horarios.join(', ')+' · '+(profile.horario_txt||'')):'';
+  const newPub={tipo:pubType,nombre,zona,materiales:mats,descripcion:desc,precio:isFree?'Gratis':(price?`$${price}/kg`:'—'),telefono:phone,email:user?.email||'',horario,foto_url:pubFotoData,tomada:false,lat:-34.60+(Math.random()-.5)*.12,lng:-58.42+(Math.random()-.5)*.16}
+  if(user){
+    const {data}=await sb.from('publications').insert({...newPub,user_id:user.id}).select().single()
+    if(data) DATA.push(data)
+  } else { DATA.push({...newPub,id:'d'+Date.now()}) }
+  closeSheets();renderPins();toast('¡Publicado en el mapa!')
+  document.getElementById('pub-desc').value='';document.getElementById('pub-price').value='';isFree=false
+  document.getElementById('freebox').classList.remove('on');document.getElementById('freebox').textContent='';document.getElementById('price-fld').style.display='block'
+  pubFotoData=null
+  const fd=document.getElementById('foto-drop')
+  fd.innerHTML=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="var(--text3)" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="var(--text3)"/><path d="M3 15l5-5 4 4 3-3 6 6" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><div style="font-size:12px;font-weight:600;color:var(--text2)">Tocá para subir foto</div><div style="font-size:11px;color:var(--text3)">JPG, PNG — opcional</div>`
+  document.querySelectorAll('#tgrid .tcard').forEach((c,i)=>c.classList.toggle('on',i===0));pubType='generador'
+  document.getElementById('foto-field').style.display='block'
+}
+
+// ═══════════════════════════════
+// PERFIL
+// ═══════════════════════════════
+async function fillPerfil(){
+  if(!profile) return
+  updateAvatar()
+  document.getElementById('pn-big').textContent=profile.nombre||'—'
+  document.getElementById('pz-big').textContent=profile.zona||'—'
+  document.getElementById('e-name').value=profile.nombre||''
+  document.getElementById('e-zona').value=profile.zona||''
+  document.getElementById('rbadges').innerHTML=(profile.roles||[]).map(r=>`<span class="rb ${RC[r]||''}">${RL[r]||r}</span>`).join('')
+  const {data:hist}=await sb.from('history').select('*').eq('user_id',user.id).order('created_at',{ascending:false})
+  HISTORIAL=hist||[]
+  const totalKg=HISTORIAL.reduce((s,h)=>s+(h.kg||0),0),co2=Math.round(totalKg*1.5)
+  const {data:myPubs}=await sb.from('publications').select('id').eq('user_id',user.id)
+  const {data:revs}=await sb.from('reviews').select('stars').in('publication_id',(myPubs||[]).map(p=>p.id))
+  const avgR=(revs&&revs.length)?(revs.reduce((s,r)=>s+(r.stars||0),0)/revs.length).toFixed(1):'—'
+  document.getElementById('imp-kg').textContent=totalKg
+  document.getElementById('imp-co2').textContent=co2
+  document.getElementById('imp-con').textContent=HISTORIAL.length
+  document.getElementById('imp-rat').textContent=avgR
+  document.getElementById('nivel-kg').textContent=totalKg
+  document.getElementById('prog-fill').style.width=Math.min(100,Math.round(totalKg/50*100))+'%'
+  document.getElementById('nivel-txt').textContent=totalKg<50?'Semilla':totalKg<150?'Brote':totalKg<300?'Árbol':'Bosque'
+  document.getElementById('imp-banner-txt').textContent=`Reciclaste ${totalKg}kg y evitaste ${co2}kg de CO₂. ¡Seguí sumando!`
+  document.getElementById('historial-list').innerHTML=HISTORIAL.length?HISTORIAL.map((h,i)=>`
+    <div class="hist-item">
+      <div class="hist-row"><div class="hist-dot" style="background:${C[h.tipo]||'#888'}"></div><div class="hist-main">${h.descripcion||'Intercambio'}</div><div class="hist-when">${h.created_at?new Date(h.created_at).toLocaleDateString('es-AR'):''}</div></div>
+      <div class="hist-detail">${h.kg||0}kg · ${h.tipo||''}</div>
+      ${h.calificado?`<div style="display:flex;gap:2px;padding-left:18px;margin-top:5px">${[1,2,3,4,5].map(s=>`<span style="color:${s<=(h.stars||0)?'#EF9F27':'#ddd'};font-size:13px">★</span>`).join('')}<span style="font-size:11px;color:var(--text2);margin-left:4px">${h.comentario||''}</span></div>`
+      :`<button onclick="openHistCal(${i})" style="margin-top:8px;margin-left:18px;padding:4px 12px;border-radius:99px;border:1.5px solid #1D9E75;background:#E1F5EE;color:#0F6E56;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Calificar intercambio</button>`}
+    </div>`).join(''):'<div style="font-size:13px;color:var(--text3);padding:8px 0">No tenés actividad todavía. ¡Publicá en el mapa!</div>'
+  if((profile.horarios||[]).length){
+    document.querySelectorAll('#dias-grid .dia-row').forEach(r=>{
+      if((profile.horarios||[]).includes(r.querySelector('.dia-label').textContent)){r.classList.add('on');r.querySelector('.dia-check').textContent='✓'}
+    })
+    document.getElementById('horario-inp').value=profile.horario_txt||''
+  }
+}
+
+function openHistCal(i){
+  document.getElementById('cal-sub').textContent='Calificá este intercambio'
+  starVal=0;document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('on'));document.getElementById('cal-comment').value=''
+  document.getElementById('cal-modal').classList.add('on');document.getElementById('cal-modal').dataset.histIdx=i
+  sel=null
+}
+
+async function saveProfile(){
+  const n=document.getElementById('e-name').value.trim(),z=document.getElementById('e-zona').value.trim()
+  if(n) profile.nombre=n;if(z) profile.zona=z
+  if(user) await sb.from('profiles').update({nombre:profile.nombre,zona:profile.zona}).eq('id',user.id)
+  updateAvatar();document.getElementById('pn-big').textContent=profile.nombre;document.getElementById('pz-big').textContent=profile.zona
+  toast('¡Datos guardados!')
+}
+
+async function saveHorario(){
+  const horarios=[...document.querySelectorAll('#dias-grid .dia-row.on')].map(r=>r.querySelector('.dia-label').textContent)
+  const horario_txt=document.getElementById('horario-inp').value.trim()
+  profile.horarios=horarios;profile.horario_txt=horario_txt
+  if(user) await sb.from('profiles').update({horarios,horario_txt}).eq('id',user.id)
+  toast('¡Horario guardado!')
+}
+
+// ═══════════════════════════════
+// ARRANQUE — chequear sesión
+// ═══════════════════════════════
+async function init(){
+  const {data:{session}}=await sb.auth.getSession()
+  if(session){user=session.user;await loadProfile();await initApp()}
+  sb.auth.onAuthStateChange(async(_,session)=>{
+    if(session&&!user){user=session.user;await loadProfile();await initApp()}
+  })
+}
+init()
+</script>
+</body>
+</html>
