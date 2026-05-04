@@ -279,7 +279,8 @@ textarea.finp{height:72px;padding:10px 13px;resize:none}
       <button class="mat-btn" onclick="setMat('organico',this)"><div class="mico">🌿</div><div class="mtxt">Org.</div></button>
     </div>
     <div id="map-canvas">
-      <svg id="map-svg" viewBox="0 0 580 500" preserveAspectRatio="xMidYMid meet">
+      <div id="gmap" style="width:100%;height:100%"></div>
+      <div id="map-canvas-legacy" style="display:none"><svg id="map-svg" viewBox="0 0 580 500" preserveAspectRatio="xMidYMid meet">
         <rect width="580" height="500" fill="#e8f0e4"/>
         <g fill="#d4dfca" stroke="#c8d9bc" stroke-width="0.5">
           <rect x="20" y="25" width="65" height="42" rx="2"/><rect x="100" y="25" width="52" height="42" rx="2"/><rect x="165" y="25" width="75" height="42" rx="2"/><rect x="252" y="25" width="58" height="42" rx="2"/><rect x="322" y="25" width="70" height="42" rx="2"/><rect x="404" y="25" width="60" height="42" rx="2"/><rect x="476" y="25" width="78" height="42" rx="2"/>
@@ -493,6 +494,7 @@ textarea.finp{height:72px;padding:10px 13px;resize:none}
 // ═══════════════════════════════
 const SUPABASE_URL = 'https://kivfgmfxumvmbzmghcdm.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_2C8AEqnLymAlLREXaDCWjA_3_nY1Q_n'
+const MAPS_KEY = 'AIzaSyBppqI_ghSVG4CxbeG2pznwsVFUM3U8paY'
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
 // ═══════════════════════════════
@@ -640,7 +642,9 @@ async function loadPublications(){
   renderPins()
 }
 
-function renderPins(){
+function renderPins(){if(gmap){renderGooglePins();return}
+  // fallback SVG
+  
   const layer=document.getElementById('pins-layer');layer.innerHTML=''
   DATA.filter(d=>(rolFilter==='todo'||d.tipo===rolFilter)&&(matFilter==='todo'||(d.materiales||[]).includes(matFilter))).forEach(d=>{
     const c=d.tomada?'#aaa':(C[d.tipo]||'#888')
@@ -844,5 +848,54 @@ async function init(){
 }
 init()
 </script>
+
+<script>
+// Google Maps integration
+let gmap = null
+let gmapMarkers = []
+
+function initGoogleMap(){
+  gmap = new google.maps.Map(document.getElementById('gmap'), {
+    center:{lat:-34.6037, lng:-58.3816},
+    zoom:13,
+    styles:[
+      {featureType:'poi',elementType:'labels',stylers:[{visibility:'off'}]},
+      {featureType:'transit',elementType:'labels',stylers:[{visibility:'off'}]}
+    ],
+    disableDefaultUI:false,
+    zoomControl:true,
+    mapTypeControl:false,
+    streetViewControl:false,
+    fullscreenControl:false
+  })
+}
+
+function renderGooglePins(){
+  gmapMarkers.forEach(m=>m.setMap(null))
+  gmapMarkers=[]
+  if(!gmap) return
+  const colors={reciclador:'#1D9E75',generador:'#378ADD',productor:'#EF9F27',comprador:'#7F77DD'}
+  DATA.filter(d=>(rolFilter==='todo'||d.tipo===rolFilter)&&(matFilter==='todo'||(d.materiales||[]).includes(matFilter))).forEach(d=>{
+    if(!d.lat||!d.lng) return
+    const color=d.tomada?'#aaa':(colors[d.tipo]||'#888')
+    const marker=new google.maps.Marker({
+      position:{lat:parseFloat(d.lat),lng:parseFloat(d.lng)},
+      map:gmap,
+      icon:{
+        path:google.maps.SymbolPath.CIRCLE,
+        scale:14,
+        fillColor:color,
+        fillOpacity:d.tomada?.5:1,
+        strokeColor:'#fff',
+        strokeWeight:2.5
+      },
+      title:d.nombre||''
+    })
+    marker.addListener('click',()=>openPoint(d))
+    gmapMarkers.push(marker)
+  })
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBppqI_ghSVG4CxbeG2pznwsVFUM3U8paY&callback=initGoogleMap&v=weekly" async defer></script>
 </body>
 </html>
