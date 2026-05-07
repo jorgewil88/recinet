@@ -956,5 +956,115 @@ function saveProfile(){
 
 renderPins()
 </script>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════ SUPABASE CONFIG ═══════════════
+const SUPABASE_URL = 'https://kivfgmfxumvmbzmghcdm.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_2C8AEqnLymAlLREXaDCWjA_3_nY1Q_n'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+// Override doLogin to use real Supabase auth
+async function doLoginReal(){
+  const e=document.getElementById('l-email').value.trim(),p=document.getElementById('l-pass').value
+  if(!e||!p){showToast('Completá email y contraseña');return}
+  showToast('Ingresando...')
+  const {data,error}=await sb.auth.signInWithPassword({email:e,password:p})
+  if(error){showToast('Error: '+error.message);return}
+  const profile=await loadProfile(data.user.id)
+  user={nombre:profile?.nombre||e.split('@')[0],zona:profile?.zona||'CABA',roles:profile?.roles||[],email:e,foto:profile?.foto_url||null,horarios:profile?.horarios||[],horarioTxt:profile?.horario_txt||''}
+  updateAv();goTo('mapa');renderPins();showToast('¡Bienvenido/a a Gaiarise! 🌱')
+}
+
+async function doRegisterReal(){
+  const n=document.getElementById('r-name').value.trim(),e=document.getElementById('r-email').value.trim()
+  const p=document.getElementById('r-pass').value,z=document.getElementById('r-zona').value.trim()
+  const roles=[...document.querySelectorAll('.rchip.on')].map(c=>c.textContent.toLowerCase())
+  if(!n||!e||!p){showToast('Completá todos los campos');return}
+  if(!roles.length){showToast('Elegí al menos un rol');return}
+  showToast('Creando cuenta...')
+  const {data,error}=await sb.auth.signUp({email:e,password:p})
+  if(error){showToast('Error: '+error.message);return}
+  await sb.from('profiles').upsert({id:data.user.id,nombre:n,zona:z||'CABA',roles,materiales:[],horarios:[],horario_txt:''})
+  user={nombre:n,zona:z||'CABA',roles,email:e,foto:null,horarios:[],horarioTxt:''}
+  updateAv();goTo('mapa');renderPins();showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
+}
+
+async function doGoogleLogin(){
+  const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}})
+  if(error) showToast('Error: '+error.message)
+}
+
+async function doLogoutReal(){
+  hideLogout();await sb.auth.signOut()
+  user={nombre:'',zona:'',roles:[],email:'',foto:null}
+  document.getElementById('l-email').value='';document.getElementById('l-pass').value=''
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'))
+  document.getElementById('s-auth').classList.add('on')
+  document.getElementById('login-form').style.display='block';document.getElementById('reg-form').style.display='none'
+  showToast('Sesión cerrada')
+}
+
+async function loadProfile(uid){
+  const {data}=await sb.from('profiles').select('*').eq('id',uid).single()
+  return data
+}
+
+async function saveProfileReal(){
+  const n=document.getElementById('e-name').value.trim(),z=document.getElementById('e-zona').value.trim()
+  if(n)user.nombre=n;if(z)user.zona=z
+  const {data:{user:sbUser}}=await sb.auth.getUser()
+  if(sbUser) await sb.from('profiles').update({nombre:user.nombre,zona:user.zona}).eq('id',sbUser.id)
+  updateAv();document.getElementById('pn-big').textContent=user.nombre;document.getElementById('pz-big').textContent=user.zona
+  showToast('¡Datos guardados!')
+}
+
+async function publishToSupabase(pub){
+  const {data:{user:sbUser}}=await sb.auth.getUser()
+  if(!sbUser) return
+  await sb.from('publications').insert({
+    user_id:sbUser.id,tipo:pub.tipo,nombre:pub.nombre,zona:pub.zona,
+    materiales:pub.mats,descripcion:pub.desc,precio:pub.precio,
+    telefono:pub.tel,horario:pub.horario,foto_url:pub.foto,tomada:false,
+    lat:pub.lat,lng:pub.lng
+  })
+}
+
+// Override buttons to use real auth
+document.addEventListener('DOMContentLoaded',()=>{
+  // Override login button
+  document.querySelector('#login-form .btn-green').onclick=doLoginReal
+  // Override Google button
+  document.querySelector('#login-form .btn-outline').onclick=doGoogleLogin
+  // Override register button
+  document.querySelector('#reg-form .btn-green').onclick=doRegisterReal
+  // Override logout confirm
+  document.querySelector('.modal-confirm').onclick=doLogoutReal
+  // Override save profile
+  document.querySelector('.esec .btn-green').onclick=saveProfileReal
+
+  // Check existing session
+  sb.auth.getSession().then(async({data:{session}})=>{
+    if(session){
+      const profile=await loadProfile(session.user.id)
+      user={nombre:profile?.nombre||session.user.email.split('@')[0],zona:profile?.zona||'CABA',roles:profile?.roles||[],email:session.user.email,foto:profile?.foto_url||null,horarios:profile?.horarios||[],horarioTxt:profile?.horario_txt||''}
+      updateAv();goTo('mapa');renderPins()
+    }
+  })
+
+  // Listen for OAuth redirect
+  sb.auth.onAuthStateChange(async(_,session)=>{
+    if(session&&!user.email){
+      const profile=await loadProfile(session.user.id)
+      if(!profile){
+        await sb.from('profiles').insert({id:session.user.id,nombre:session.user.user_metadata?.full_name||session.user.email.split('@')[0],zona:'CABA',roles:[],materiales:[],horarios:[],horario_txt:''})
+      }
+      user={nombre:profile?.nombre||session.user.user_metadata?.full_name||session.user.email.split('@')[0],zona:profile?.zona||'CABA',roles:profile?.roles||[],email:session.user.email,foto:profile?.foto_url||null,horarios:profile?.horarios||[],horarioTxt:profile?.horario_txt||''}
+      updateAv();goTo('mapa');renderPins();showToast('¡Bienvenido/a a Gaiarise! 🌱')
+    }
+  })
+})
+</script>
+
 </body>
 </html>
