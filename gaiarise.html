@@ -645,7 +645,8 @@ function onAddrInput(val){
 
 let autocompleteService=null,placesService=null
 
-function initPlaces(){initGmap();
+function initPlaces(){
+  if(!gmap) return;
   if(!window.google||!window.google.maps||!window.google.maps.places) return
   autocompleteService=new google.maps.places.AutocompleteService()
   placesService=new google.maps.places.PlacesService(document.createElement('div'))
@@ -867,7 +868,9 @@ function submitReview(){
 let gmap=null,gmapMarkers=[]
 
 function initGmap(){
-  gmap=new google.maps.Map(document.getElementById('gmap'),{
+  const mapEl=document.getElementById('gmap')
+  if(!mapEl) return
+  gmap=new google.maps.Map(mapEl,{
     center:{lat:-34.6037,lng:-58.3816},
     zoom:13,
     styles:[
@@ -879,12 +882,16 @@ function initGmap(){
     fullscreenControl:false,
     zoomControlOptions:{position:google.maps.ControlPosition.RIGHT_BOTTOM}
   })
-  renderPins()
+  // Initialize places services
+  autocompleteService=new google.maps.places.AutocompleteService()
+  placesService=new google.maps.places.PlacesService(mapEl)
+  // Render pins once map is ready
+  google.maps.event.addListenerOnce(gmap,'idle',()=>renderPins())
 }
 
 function renderPins(){
+  if(!gmap){setTimeout(renderPins,300);return}
   gmapMarkers.forEach(m=>m.setMap(null));gmapMarkers=[]
-  if(!gmap) return
   DATA.filter(d=>(rolFilter==='todo'||d.tipo===rolFilter)&&(matFilter==='todo'||d.mats.includes(matFilter))).forEach(d=>{
     const color=d.tomada?'#9AABA5':(C[d.tipo]||'#888')
     const marker=new google.maps.Marker({
