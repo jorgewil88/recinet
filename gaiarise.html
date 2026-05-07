@@ -273,28 +273,7 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
       <button class="mat-btn" onclick="setMat('organico',this)" title="Orgánico"><div class="mico">🌿</div><div class="mtxt">Org.</div></button>
     </div>
     <div id="map-canvas">
-      <svg width="100%" height="100%" viewBox="0 0 580 500" preserveAspectRatio="xMidYMid meet">
-        <rect width="580" height="500" fill="#E8F0E4"/>
-        <g fill="#D4DFC8" stroke="#C4D4B8" stroke-width="0.5">
-          <rect x="20" y="25" width="65" height="42" rx="3"/><rect x="100" y="25" width="52" height="42" rx="3"/><rect x="165" y="25" width="75" height="42" rx="3"/><rect x="252" y="25" width="58" height="42" rx="3"/><rect x="322" y="25" width="70" height="42" rx="3"/><rect x="404" y="25" width="60" height="42" rx="3"/><rect x="476" y="25" width="78" height="42" rx="3"/>
-          <rect x="20" y="92" width="58" height="52" rx="3"/><rect x="92" y="92" width="78" height="52" rx="3"/><rect x="183" y="92" width="60" height="52" rx="3"/><rect x="255" y="92" width="85" height="52" rx="3"/><rect x="352" y="92" width="52" height="52" rx="3"/><rect x="416" y="92" width="75" height="52" rx="3"/>
-          <rect x="20" y="168" width="75" height="48" rx="3"/><rect x="108" y="168" width="60" height="48" rx="3"/><rect x="182" y="168" width="85" height="48" rx="3"/><rect x="279" y="168" width="66" height="48" rx="3"/><rect x="357" y="168" width="75" height="48" rx="3"/>
-          <rect x="20" y="240" width="60" height="52" rx="3"/><rect x="94" y="240" width="75" height="52" rx="3"/><rect x="182" y="240" width="65" height="52" rx="3"/><rect x="260" y="240" width="80" height="52" rx="3"/><rect x="352" y="240" width="58" height="52" rx="3"/><rect x="422" y="240" width="85" height="52" rx="3"/>
-          <rect x="20" y="316" width="70" height="48" rx="3"/><rect x="104" y="316" width="65" height="48" rx="3"/><rect x="182" y="316" width="80" height="48" rx="3"/><rect x="274" y="316" width="60" height="48" rx="3"/><rect x="346" y="316" width="76" height="48" rx="3"/>
-          <rect x="20" y="388" width="75" height="58" rx="3"/><rect x="108" y="388" width="60" height="58" rx="3"/><rect x="182" y="388" width="85" height="58" rx="3"/><rect x="280" y="388" width="70" height="58" rx="3"/><rect x="362" y="388" width="58" height="58" rx="3"/>
-        </g>
-        <g stroke="#fff" fill="none">
-          <line x1="0" y1="82" x2="580" y2="82" stroke-width="8"/><line x1="0" y1="158" x2="580" y2="158" stroke-width="8"/><line x1="0" y1="232" x2="580" y2="232" stroke-width="8"/><line x1="0" y1="308" x2="580" y2="308" stroke-width="8"/><line x1="0" y1="380" x2="580" y2="380" stroke-width="8"/>
-          <line x1="88" y1="0" x2="88" y2="500" stroke-width="8"/><line x1="178" y1="0" x2="178" y2="500" stroke-width="8"/><line x1="348" y1="0" x2="348" y2="500" stroke-width="8"/><line x1="418" y1="0" x2="418" y2="500" stroke-width="8"/>
-          <line x1="136" y1="0" x2="136" y2="500" stroke-width="2" stroke="#D8ECC8"/><line x1="262" y1="0" x2="262" y2="500" stroke-width="2" stroke="#D8ECC8"/>
-        </g>
-        <g font-size="9" fill="#8A9B95" text-anchor="middle" font-family="system-ui" font-weight="600">
-          <text x="48" y="136">Palermo</text><text x="218" y="136">Recoleta</text><text x="382" y="136">Belgrano</text>
-          <text x="48" y="278">Flores</text><text x="298" y="278">San Telmo</text><text x="468" y="278">Boedo</text>
-          <text x="136" y="440">Caballito</text>
-        </g>
-        <g id="pins-layer"></g>
-      </svg>
+      <div id="gmap" style="width:100%;height:100%"></div>
       <div class="legend">
         <div class="leg-item"><div class="leg-dot" style="background:#2D9E6B"></div>Reciclador</div>
         <div class="leg-item"><div class="leg-dot" style="background:#378ADD"></div>Generador</div>
@@ -666,7 +645,7 @@ function onAddrInput(val){
 
 let autocompleteService=null,placesService=null
 
-function initPlaces(){
+function initPlaces(){initGmap();
   if(!window.google||!window.google.maps||!window.google.maps.places) return
   autocompleteService=new google.maps.places.AutocompleteService()
   placesService=new google.maps.places.PlacesService(document.createElement('div'))
@@ -885,17 +864,44 @@ function submitReview(){
   closeCal();renderRevs(sel);showToast('¡Reseña publicada! 🌟')
 }
 
+let gmap=null,gmapMarkers=[]
+
+function initGmap(){
+  gmap=new google.maps.Map(document.getElementById('gmap'),{
+    center:{lat:-34.6037,lng:-58.3816},
+    zoom:13,
+    styles:[
+      {featureType:'poi',elementType:'labels',stylers:[{visibility:'off'}]},
+      {featureType:'transit',stylers:[{visibility:'off'}]}
+    ],
+    mapTypeControl:false,
+    streetViewControl:false,
+    fullscreenControl:false,
+    zoomControlOptions:{position:google.maps.ControlPosition.RIGHT_BOTTOM}
+  })
+  renderPins()
+}
+
 function renderPins(){
-  const l=document.getElementById('pins-layer');l.innerHTML=''
+  gmapMarkers.forEach(m=>m.setMap(null));gmapMarkers=[]
+  if(!gmap) return
   DATA.filter(d=>(rolFilter==='todo'||d.tipo===rolFilter)&&(matFilter==='todo'||d.mats.includes(matFilter))).forEach(d=>{
-    const c=d.tomada?'#9AABA5':(C[d.tipo]||'#888')
-    const g=document.createElementNS('http://www.w3.org/2000/svg','g')
-    g.setAttribute('cursor','pointer')
-    g.innerHTML=`
-      <circle cx="${d.sx}" cy="${d.sy}" r="16" fill="${c}" stroke="white" stroke-width="3" opacity="${d.tomada?.4:1}"/>
-      <circle cx="${d.sx}" cy="${d.sy}" r="6" fill="white" opacity="${d.tomada?.3:.85}"/>
-    `
-    g.addEventListener('click',()=>abrirPunto(d.id));l.appendChild(g)
+    const color=d.tomada?'#9AABA5':(C[d.tipo]||'#888')
+    const marker=new google.maps.Marker({
+      position:{lat:d.lat,lng:d.lng},
+      map:gmap,
+      icon:{
+        path:google.maps.SymbolPath.CIRCLE,
+        scale:14,
+        fillColor:color,
+        fillOpacity:d.tomada?0.4:1,
+        strokeColor:'#fff',
+        strokeWeight:3
+      },
+      title:d.nombre
+    })
+    marker.addListener('click',()=>abrirPunto(d.id))
+    gmapMarkers.push(marker)
   })
 }
 
