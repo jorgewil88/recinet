@@ -540,14 +540,22 @@ const DATA=[
 
 function ini(n){return(n||'?').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?'}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2500)}
-function goTo(s){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'));document.getElementById('s-'+s).classList.add('on');if(s==='perfil')fillPerfil()}
+function goTo(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'))
+  document.getElementById('s-'+s).classList.add('on')
+  if(s==='perfil') fillPerfil()
+  if(s==='mapa'){
+    if(!gmap) setTimeout(initGmap,100)
+    else setTimeout(()=>gmap.invalidateSize(),100)
+  }
+}
 function switchReg(s){document.getElementById('login-form').style.display=s?'none':'block';document.getElementById('reg-form').style.display=s?'block':'none'}
 
 function doLogin(){
   const e=document.getElementById('l-email').value.trim(),p=document.getElementById('l-pass').value
   if(!e||!p){showToast('Completá email y contraseña');return}
   user={nombre:'Usuario Demo',zona:'Palermo, CABA',roles:['generador','reciclador'],email:e,foto:null,horarios:['Lunes','Miércoles'],horarioTxt:'9 a 17 hs'}
-  updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise! 🌱')
+  updateAv();goTo('mapa');showToast('¡Bienvenido/a a Gaiarise! 🌱')
 }
 function doRegister(){
   const n=document.getElementById('r-name').value.trim(),e=document.getElementById('r-email').value.trim(),z=document.getElementById('r-zona').value.trim()
@@ -555,7 +563,7 @@ function doRegister(){
   if(!n||!e){showToast('Completá nombre y email');return}
   if(!roles.length){showToast('Elegí al menos un rol');return}
   user={nombre:n,zona:z||'CABA',roles,email:e,foto:null,horarios:[],horarioTxt:''}
-  updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
+  updateAv();goTo('mapa');showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
 }
 function showLogout(){document.getElementById('logout-modal').classList.add('on')}
 function hideLogout(){document.getElementById('logout-modal').classList.remove('on')}
@@ -873,10 +881,14 @@ let gmap=null,gmapMarkers=[]
 
 function initGmap(){
   const mapEl=document.getElementById('gmap')
-  if(!mapEl||gmap) return
+  if(!mapEl) return
+  if(gmap){gmap.invalidateSize();renderPins();return}
+  // Make sure the screen is visible before init
+  document.getElementById('s-mapa').classList.add('on')
+  document.querySelectorAll('.screen:not(#s-mapa)').forEach(x=>x.classList.remove('on'))
   gmap=L.map('gmap',{zoomControl:true,attributionControl:false}).setView([-34.6037,-58.3816],13)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(gmap)
-  renderPins()
+  setTimeout(()=>{gmap.invalidateSize();renderPins()},200)
 }
 
 function renderPins(){
@@ -994,7 +1006,7 @@ async function doLoginReal(){
   if(error){showToast('Error: '+error.message);return}
   const profile=await loadProfile(data.user.id)
   user={nombre:profile?.nombre||e.split('@')[0],zona:profile?.zona||'CABA',roles:profile?.roles||[],email:e,foto:profile?.foto_url||null,horarios:profile?.horarios||[],horarioTxt:profile?.horario_txt||''}
-  updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise! 🌱')
+  updateAv();goTo('mapa');showToast('¡Bienvenido/a a Gaiarise! 🌱')
 }
 
 async function doRegisterReal(){
@@ -1008,7 +1020,7 @@ async function doRegisterReal(){
   if(error){showToast('Error: '+error.message);return}
   await sb.from('profiles').upsert({id:data.user.id,nombre:n,zona:z||'CABA',roles,materiales:[],horarios:[],horario_txt:''})
   user={nombre:n,zona:z||'CABA',roles,email:e,foto:null,horarios:[],horarioTxt:''}
-  updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
+  updateAv();goTo('mapa');showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
 }
 
 async function doGoogleLogin(){
@@ -1081,7 +1093,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         await sb.from('profiles').insert({id:session.user.id,nombre:session.user.user_metadata?.full_name||session.user.email.split('@')[0],zona:'CABA',roles:[],materiales:[],horarios:[],horario_txt:''})
       }
       user={nombre:profile?.nombre||session.user.user_metadata?.full_name||session.user.email.split('@')[0],zona:profile?.zona||'CABA',roles:profile?.roles||[],email:session.user.email,foto:profile?.foto_url||null,horarios:profile?.horarios||[],horarioTxt:profile?.horario_txt||''}
-      updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise! 🌱')
+      updateAv();goTo('mapa');showToast('¡Bienvenido/a a Gaiarise! 🌱')
     }
   })
 })
