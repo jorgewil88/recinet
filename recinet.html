@@ -268,8 +268,8 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
       <div style="font-size:9px;font-weight:700;color:#9AABA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;text-align:center">Mat.</div>
       <button class="mat-btn on" onclick="setMat('todo',this)" title="Todo"><div class="mico">◉</div><div class="mtxt">Todo</div></button>
       <div style="width:30px;height:.5px;background:#E2E8E2;margin:2px 0"></div>
-      <button class="mat-btn" onclick="setMat('papel',this)" title="Papel"><div class="mico">📄</div><div class="mtxt">Papel</div></button>
-      <button class="mat-btn" onclick="setMat('carton',this)" title="Cartón"><div class="mico">📦</div><div class="mtxt">Cartón</div></button>
+      <button class="mat-btn" onclick="setMat('papel-carton',this)" title="Papel"><div class="mico">📄</div><div class="mtxt">Papel</div></button>
+      <button class="mat-btn" onclick="setMat('papel-carton',this)" title="Cartón"><div class="mico">📦</div><div class="mtxt">Cartón</div></button>
       <button class="mat-btn" onclick="setMat('plastico',this)" title="Plástico"><div class="mico">♻</div><div class="mtxt">Plást.</div></button>
       <button class="mat-btn" onclick="setMat('organico',this)" title="Orgánico"><div class="mico">🌿</div><div class="mtxt">Org.</div></button>
     </div>
@@ -361,8 +361,7 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
         <div class="fld"><label class="flbl">Barrio / Zona</label><input class="finp" id="e-zona" placeholder="Ej: Palermo, CABA"></div>
         <div class="fld"><label class="flbl">Materiales que manejás</label>
           <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">
-            <button class="fchip" onclick="this.classList.toggle('on')">Papel</button>
-            <button class="fchip" onclick="this.classList.toggle('on')">Cartón</button>
+            <button class="fchip" onclick="this.classList.toggle('on')">Papel y Cartón</button>
             <button class="fchip" onclick="this.classList.toggle('on')">Plástico</button>
             <button class="fchip" onclick="this.classList.toggle('on')">Orgánico</button>
           </div>
@@ -485,8 +484,7 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
     </div>
     <div class="fld"><label class="flbl">Materiales</label>
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;margin-bottom:12px" id="pub-mats">
-        <button class="fchip" onclick="this.classList.toggle('on')">Papel</button>
-        <button class="fchip" onclick="this.classList.toggle('on')">Cartón</button>
+        <button class="fchip" onclick="this.classList.toggle('on')">Papel y Cartón</button>
         <button class="fchip" onclick="this.classList.toggle('on')">Plástico</button>
         <button class="fchip" onclick="this.classList.toggle('on')">Orgánico</button>
       </div>
@@ -550,13 +548,13 @@ const HIST=[
 ]
 
 const DATA=[
-  {id:1,tipo:'reciclador',nombre:'Reciclar+ SRL',zona:'Palermo',mats:['papel','carton'],desc:'Compramos papel y cartón limpio. Retiro a domicilio para más de 5kg. Pesamos en el momento.',precio:'$150/kg papel · $80/kg cartón',tel:'1155001234',email:'info@reciclarplus.com',horario:'Lun a Vie · 9 a 17 hs',foto:null,tomada:false,sx:112,sy:122,rating:4.8,lat:-34.588,lng:-58.414},
-  {id:2,tipo:'generador',nombre:'Ana Martínez',zona:'Flores',mats:['plastico','carton'],desc:'Cajas de cartón y botellas PET limpias. Doy gratis, retiro a acordar.',precio:'Gratis',tel:'1166009988',email:'ana@gmail.com',horario:'',foto:null,tomada:false,sx:58,sy:278,rating:4.5,lat:-34.628,lng:-58.464},
-  {id:3,tipo:'productor',nombre:'La Billetera Verde',zona:'San Telmo',mats:['papel','carton'],desc:'Fabricamos billeteras, cuadernos y accesorios 100% papel reciclado artesanal.',precio:'Billeteras desde $3.500',tel:'1177003322',email:'verde@billetera.com',horario:'Mar a Sáb · 10 a 18 hs',foto:null,tomada:false,sx:300,sy:272,rating:4.9,lat:-34.620,lng:-58.368},
-  {id:4,tipo:'reciclador',nombre:'EcoTaller Boedo',zona:'Boedo',mats:['organico','papel'],desc:'Compostaje comunitario y procesamiento de papel. Aceptamos grandes volúmenes.',precio:'Gratis · donación bienvenida',tel:'1188004455',email:'eco@boedo.com',horario:'Lun, Mié, Vie · 8 a 13 hs',foto:null,tomada:false,sx:462,sy:260,rating:4.7,lat:-34.640,lng:-58.424},
-  {id:5,tipo:'comprador',nombre:'Sofía Reyes',zona:'Villa Crespo',mats:['papel','plastico'],desc:'Busco papel y plástico reciclado para proyecto escolar comunitario.',precio:'Hasta $200/kg',tel:'1199005566',email:'sofia@edu.com',horario:'',foto:null,tomada:false,sx:182,sy:188,rating:4.3,lat:-34.599,lng:-58.442},
+  {id:1,tipo:'reciclador',nombre:'Reciclar+ SRL',zona:'Palermo',mats:['papel-carton'],desc:'Compramos papel y cartón limpio. Retiro a domicilio para más de 5kg. Pesamos en el momento.',precio:'$150/kg papel · $80/kg cartón',tel:'1155001234',email:'info@reciclarplus.com',horario:'Lun a Vie · 9 a 17 hs',foto:null,tomada:false,sx:112,sy:122,rating:4.8,lat:-34.588,lng:-58.414},
+  {id:2,tipo:'generador',nombre:'Ana Martínez',zona:'Flores',mats:['plastico','papel-carton'],desc:'Cajas de cartón y botellas PET limpias. Doy gratis, retiro a acordar.',precio:'Gratis',tel:'1166009988',email:'ana@gmail.com',horario:'',foto:null,tomada:false,sx:58,sy:278,rating:4.5,lat:-34.628,lng:-58.464},
+  {id:3,tipo:'productor',nombre:'La Billetera Verde',zona:'San Telmo',mats:['papel-carton'],desc:'Fabricamos billeteras, cuadernos y accesorios 100% papel reciclado artesanal.',precio:'Billeteras desde $3.500',tel:'1177003322',email:'verde@billetera.com',horario:'Mar a Sáb · 10 a 18 hs',foto:null,tomada:false,sx:300,sy:272,rating:4.9,lat:-34.620,lng:-58.368},
+  {id:4,tipo:'reciclador',nombre:'EcoTaller Boedo',zona:'Boedo',mats:['organico','papel-carton'],desc:'Compostaje comunitario y procesamiento de papel. Aceptamos grandes volúmenes.',precio:'Gratis · donación bienvenida',tel:'1188004455',email:'eco@boedo.com',horario:'Lun, Mié, Vie · 8 a 13 hs',foto:null,tomada:false,sx:462,sy:260,rating:4.7,lat:-34.640,lng:-58.424},
+  {id:5,tipo:'comprador',nombre:'Sofía Reyes',zona:'Villa Crespo',mats:['papel-carton','plastico'],desc:'Busco papel y plástico reciclado para proyecto escolar comunitario.',precio:'Hasta $200/kg',tel:'1199005566',email:'sofia@edu.com',horario:'',foto:null,tomada:false,sx:182,sy:188,rating:4.3,lat:-34.599,lng:-58.442},
   {id:6,tipo:'generador',nombre:'Librería El Libro',zona:'Belgrano',mats:['papel'],desc:'Periódicos y revistas viejas. Cantidades grandes disponibles cada semana.',precio:'Gratis',tel:'1100116677',email:'libreria@libro.com',horario:'Lun a Sáb · 9 a 20 hs',foto:null,tomada:false,sx:390,sy:122,rating:4.6,lat:-34.558,lng:-58.450},
-  {id:7,tipo:'productor',nombre:'Muebles Renacidos',zona:'Mataderos',mats:['carton','plastico'],desc:'Fabricamos muebles y accesorios del hogar con material 100% reciclado.',precio:'Silla desde $8.000',tel:'1111227788',email:'info@muebles.com',horario:'Lun a Vie · 10 a 17 hs',foto:null,tomada:false,sx:58,sy:360,rating:4.4,lat:-34.662,lng:-58.513},
+  {id:7,tipo:'productor',nombre:'Muebles Renacidos',zona:'Mataderos',mats:['papel-carton','plastico'],desc:'Fabricamos muebles y accesorios del hogar con material 100% reciclado.',precio:'Silla desde $8.000',tel:'1111227788',email:'info@muebles.com',horario:'Lun a Vie · 10 a 17 hs',foto:null,tomada:false,sx:58,sy:360,rating:4.4,lat:-34.662,lng:-58.513},
 ]
 
 function ini(n){return(n||'?').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?'}
@@ -619,7 +617,7 @@ function abrirBuscar(tipo){
     'buscar-material':{titulo:'¿Desde dónde buscás?',sub:'Te mostramos generadores con el material que necesitás',tipoFiltro:'generador',matLabel:'¿Qué material necesitás?'},
   }
   const cfg=cfgs[tipo]
-  const matOpts=['Papel','Cartón','Plástico','Orgánico'].map(m=>`<button class="bchip" onclick="this.classList.toggle('on')">${m}</button>`).join('')
+  const matOpts=['Papel y Cartón','Plástico','Orgánico'].map(m=>`<button class="bchip" onclick="this.classList.toggle('on')">${m}</button>`).join('')
 
   document.getElementById('buscar-content').innerHTML=`
     <div style="padding:18px 20px 0">
@@ -718,7 +716,7 @@ function calcDist(lat1,lng1,lat2,lng2){
 }
 
 function buscar(tipoFiltro){
-  const mats=[...document.querySelectorAll('#mat-chips .bchip.on')].map(c=>c.textContent.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''))
+  const mats=[...document.querySelectorAll('#mat-chips .bchip.on')].map(c=>c.textContent.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace('papel y carton','papel-carton'))
   const el=document.getElementById('resultados')
 
   el.innerHTML=`<div style="text-align:center;padding:40px 20px">
@@ -728,7 +726,7 @@ function buscar(tipoFiltro){
 
   setTimeout(()=>{
     let res=DATA.filter(d=>d.tipo===tipoFiltro)
-    if(mats.length) res=res.filter(d=>mats.some(m=>d.mats.some(dm=>dm.normalize('NFD').replace(/[\u0300-\u036f]/g,'').startsWith(m))))
+    if(mats.length) res=res.filter(d=>mats.some(m=>d.mats.some(dm=>dm.normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(m.replace('papel y carton','papel-carton')))))
 
     if(userCoords){
       res=res.map(d=>({...d,distKm:calcDist(userCoords.lat,userCoords.lng,d.lat,d.lng)}))
@@ -755,7 +753,7 @@ function buscar(tipoFiltro){
               <div style="flex:1;min-width:0">
                 <div style="font-size:14px;font-weight:700;color:#1A2420;margin-bottom:2px">${d.nombre}</div>
                 <div style="font-size:12px;color:#5A6B65;margin-bottom:6px">${d.zona} · ${RL[d.tipo]}</div>
-                <div style="display:flex;flex-wrap:wrap;margin-bottom:6px">${d.mats.map(m=>`<span class="res-mat">${m.charAt(0).toUpperCase()+m.slice(1)}</span>`).join('')}</div>
+                <div style="display:flex;flex-wrap:wrap;margin-bottom:6px">${d.mats.map(m=>`<span class="res-mat">${m==='papel-carton'?'Papel y Cartón':m.charAt(0).toUpperCase()+m.slice(1)}</span>`).join('')}</div>
                 <div style="font-size:12px;color:#5A6B65;line-height:1.4;margin-bottom:8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${d.desc}</div>
                 <div style="display:flex;align-items:center;justify-content:space-between">
                   <div style="font-size:13px;font-weight:700;color:#1A6B49">${d.precio}</div>
@@ -780,7 +778,7 @@ function abrirPunto(id){
   document.getElementById('pt-zn').textContent=d.zona+' · '+RL[d.tipo]
   const r=d.rating||4.5
   document.getElementById('pt-stars').innerHTML=[1,2,3,4,5].map(i=>`<span style="font-size:14px;color:${i<=Math.round(r)?'#E8913A':'#D0D8D4'}">${i<=Math.round(r)?'★':'☆'}</span>`).join('')+`<span style="font-size:12px;color:#5A6B65;margin-left:4px;font-weight:600">${r.toFixed(1)}</span>`
-  document.getElementById('pt-mats').innerHTML=['papel','carton','plastico','organico'].map(m=>`<span class="mtag ${d.mats.includes(m)?'mtag-y':'mtag-n'}">${m.charAt(0).toUpperCase()+m.slice(1)}</span>`).join('')
+  document.getElementById('pt-mats').innerHTML=['papel-carton','plastico','organico'].map(m=>`<span class="mtag ${d.mats.includes(m)?'mtag-y':'mtag-n'}">${m==='papel-carton'?'Papel y Cartón':m.charAt(0).toUpperCase()+m.slice(1)}</span>`).join('')
   document.getElementById('pt-desc').textContent=d.desc
   const hs=document.getElementById('pt-hor-sec');if(d.horario){hs.style.display='block';document.getElementById('pt-hor').textContent=d.horario}else hs.style.display='none'
   document.getElementById('pt-price').textContent=d.precio
