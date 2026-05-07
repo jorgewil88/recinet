@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Gaiarise</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:system-ui,sans-serif;background:#F2F6F2;color:#1A2420;height:100dvh;overflow:hidden;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative}
@@ -59,6 +60,8 @@ body{font-family:system-ui,sans-serif;background:#F2F6F2;color:#1A2420;height:10
 .mtxt{font-size:9px;font-weight:700;color:#5A6B65;line-height:1}
 .mat-btn.on .mtxt{color:#1A6B49}
 #map-canvas{flex:1;position:relative;overflow:hidden}
+#gmap{width:100%;height:100%}
+.leaflet-container{font-family:system-ui,sans-serif}
 .legend{position:absolute;bottom:72px;right:10px;display:flex;flex-direction:column;gap:4px;z-index:10}
 .leg-item{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.95);border-radius:99px;padding:4px 10px;font-size:10px;font-weight:600;color:#5A6B65;border:.5px solid #E2E8E2}
 .leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -544,7 +547,7 @@ function doLogin(){
   const e=document.getElementById('l-email').value.trim(),p=document.getElementById('l-pass').value
   if(!e||!p){showToast('Completá email y contraseña');return}
   user={nombre:'Usuario Demo',zona:'Palermo, CABA',roles:['generador','reciclador'],email:e,foto:null,horarios:['Lunes','Miércoles'],horarioTxt:'9 a 17 hs'}
-  updateAv();goTo('mapa');renderPins();showToast('¡Bienvenido/a a Gaiarise! 🌱')
+  updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise! 🌱')
 }
 function doRegister(){
   const n=document.getElementById('r-name').value.trim(),e=document.getElementById('r-email').value.trim(),z=document.getElementById('r-zona').value.trim()
@@ -552,7 +555,7 @@ function doRegister(){
   if(!n||!e){showToast('Completá nombre y email');return}
   if(!roles.length){showToast('Elegí al menos un rol');return}
   user={nombre:n,zona:z||'CABA',roles,email:e,foto:null,horarios:[],horarioTxt:''}
-  updateAv();goTo('mapa');renderPins();showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
+  updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
 }
 function showLogout(){document.getElementById('logout-modal').classList.add('on')}
 function hideLogout(){document.getElementById('logout-modal').classList.remove('on')}
@@ -646,7 +649,8 @@ function onAddrInput(val){
 let autocompleteService=null,placesService=null
 
 function initPlaces(){
-  if(!gmap) return;
+  // Places init not needed with Leaflet
+  return;
   if(!window.google||!window.google.maps||!window.google.maps.places) return
   autocompleteService=new google.maps.places.AutocompleteService()
   placesService=new google.maps.places.PlacesService(document.createElement('div'))
@@ -869,45 +873,23 @@ let gmap=null,gmapMarkers=[]
 
 function initGmap(){
   const mapEl=document.getElementById('gmap')
-  if(!mapEl) return
-  gmap=new google.maps.Map(mapEl,{
-    center:{lat:-34.6037,lng:-58.3816},
-    zoom:13,
-    styles:[
-      {featureType:'poi',elementType:'labels',stylers:[{visibility:'off'}]},
-      {featureType:'transit',stylers:[{visibility:'off'}]}
-    ],
-    mapTypeControl:false,
-    streetViewControl:false,
-    fullscreenControl:false,
-    zoomControlOptions:{position:google.maps.ControlPosition.RIGHT_BOTTOM}
-  })
-  // Initialize places services
-  autocompleteService=new google.maps.places.AutocompleteService()
-  placesService=new google.maps.places.PlacesService(mapEl)
-  // Render pins once map is ready
-  google.maps.event.addListenerOnce(gmap,'idle',()=>renderPins())
+  if(!mapEl||gmap) return
+  gmap=L.map('gmap',{zoomControl:true,attributionControl:false}).setView([-34.6037,-58.3816],13)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(gmap)
+  renderPins()
 }
 
 function renderPins(){
-  if(!gmap){setTimeout(renderPins,300);return}
-  gmapMarkers.forEach(m=>m.setMap(null));gmapMarkers=[]
+  if(!gmap){setTimeout(initGmap,300);return}
+  gmapMarkers.forEach(m=>gmap.removeLayer(m));gmapMarkers=[]
   DATA.filter(d=>(rolFilter==='todo'||d.tipo===rolFilter)&&(matFilter==='todo'||d.mats.includes(matFilter))).forEach(d=>{
     const color=d.tomada?'#9AABA5':(C[d.tipo]||'#888')
-    const marker=new google.maps.Marker({
-      position:{lat:d.lat,lng:d.lng},
-      map:gmap,
-      icon:{
-        path:google.maps.SymbolPath.CIRCLE,
-        scale:14,
-        fillColor:color,
-        fillOpacity:d.tomada?0.4:1,
-        strokeColor:'#fff',
-        strokeWeight:3
-      },
-      title:d.nombre
+    const icon=L.divIcon({
+      html:`<div style="width:28px;height:28px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);opacity:${d.tomada?.4:1};display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.85"></div></div>`,
+      className:'',iconSize:[28,28],iconAnchor:[14,14]
     })
-    marker.addListener('click',()=>abrirPunto(d.id))
+    const marker=L.marker([d.lat,d.lng],{icon}).addTo(gmap)
+    marker.on('click',()=>abrirPunto(d.id))
     gmapMarkers.push(marker)
   })
 }
@@ -1012,7 +994,7 @@ async function doLoginReal(){
   if(error){showToast('Error: '+error.message);return}
   const profile=await loadProfile(data.user.id)
   user={nombre:profile?.nombre||e.split('@')[0],zona:profile?.zona||'CABA',roles:profile?.roles||[],email:e,foto:profile?.foto_url||null,horarios:profile?.horarios||[],horarioTxt:profile?.horario_txt||''}
-  updateAv();goTo('mapa');renderPins();showToast('¡Bienvenido/a a Gaiarise! 🌱')
+  updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise! 🌱')
 }
 
 async function doRegisterReal(){
@@ -1026,7 +1008,7 @@ async function doRegisterReal(){
   if(error){showToast('Error: '+error.message);return}
   await sb.from('profiles').upsert({id:data.user.id,nombre:n,zona:z||'CABA',roles,materiales:[],horarios:[],horario_txt:''})
   user={nombre:n,zona:z||'CABA',roles,email:e,foto:null,horarios:[],horarioTxt:''}
-  updateAv();goTo('mapa');renderPins();showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
+  updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise, '+n.split(' ')[0]+'! 🌍')
 }
 
 async function doGoogleLogin(){
@@ -1099,7 +1081,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         await sb.from('profiles').insert({id:session.user.id,nombre:session.user.user_metadata?.full_name||session.user.email.split('@')[0],zona:'CABA',roles:[],materiales:[],horarios:[],horario_txt:''})
       }
       user={nombre:profile?.nombre||session.user.user_metadata?.full_name||session.user.email.split('@')[0],zona:profile?.zona||'CABA',roles:profile?.roles||[],email:session.user.email,foto:profile?.foto_url||null,horarios:profile?.horarios||[],horarioTxt:profile?.horario_txt||''}
-      updateAv();goTo('mapa');renderPins();showToast('¡Bienvenido/a a Gaiarise! 🌱')
+      updateAv();goTo('mapa');setTimeout(initGmap,200);showToast('¡Bienvenido/a a Gaiarise! 🌱')
     }
   })
 })
