@@ -283,7 +283,20 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
 <div id="s-mapa" class="screen">
   <div class="tbar">
     <button onclick="openGaiaPanel()" style="display:flex;align-items:center;background:transparent;border:1.5px solid #2D9E6B;border-radius:10px;padding:5px 12px;cursor:pointer;font-family:inherit"><div class="app-brand" style="margin:0">Gaia<span>rise</span></div></button>
-    <div class="tsearch"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#9AABA5" stroke-width="1.4"/><path d="M9 9l3.5 3.5" stroke="#9AABA5" stroke-width="1.4" stroke-linecap="round"/></svg><input id="map-search" placeholder="Explorá el mapa..." style="border:none;outline:none;background:transparent;font-size:13px;color:#1A2420;width:100%;font-family:inherit" oninput="buscarEnMapa(this.value)"></div>
+    <div style="flex:1;position:relative">
+    <div class="tsearch" style="padding:0 10px">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><circle cx="6" cy="6" r="4.5" stroke="#9AABA5" stroke-width="1.4"/><path d="M9 9l3.5 3.5" stroke="#9AABA5" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <input id="map-search" placeholder="Explorá el mapa..." autocomplete="off"
+        style="border:none;outline:none;background:transparent;font-size:13px;color:#1A2420;width:100%;font-family:inherit;height:100%"
+        oninput="onMainSearch(this.value)"
+        onkeydown="if(event.key==='Enter')irDesdeTopbar()">
+      <button onclick="irDesdeTopbar()" id="ir-btn"
+        style="display:none;height:26px;padding:0 10px;border-radius:99px;background:#2D9E6B;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">
+        Ir →
+      </button>
+    </div>
+    <div id="main-sug" style="position:absolute;top:42px;left:0;right:0;background:#fff;border-radius:14px;border:.5px solid #E2E8E2;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.12);display:none;overflow:hidden"></div>
+  </div>
     <div class="av" id="tav" onclick="goTo('perfil')">?</div>
   </div>
   <div class="rol-bar">
@@ -394,7 +407,18 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
   <div class="handle"></div>
   <div class="sbody">
     <div style="font-size:19px;font-weight:800;margin-bottom:4px">¿Qué querés hacer?</div>
-    <div style="font-size:13px;color:#5A6B65;margin-bottom:18px">Elegí y te mostramos lo que hay cerca</div>
+    <div style="font-size:13px;color:#5A6B65;margin-bottom:14px">Elegí y te mostramos lo que hay cerca</div>
+
+    <!-- BANNER GAIARISE -->
+    <div onclick="closeAll();openGaiaPanel()" style="background:linear-gradient(135deg,#2D9E6B,#1A6B49);border-radius:14px;padding:16px 18px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:0 4px 16px rgba(45,158,107,.3)">
+      <div style="font-size:36px;flex-shrink:0">🌱</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:3px">Aprendé y conseguí materiales</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.8);line-height:1.4">Videos de reciclaje · Dónde comprar compostera, materiales y más</div>
+      </div>
+      <div style="font-size:20px;color:rgba(255,255,255,.7)">›</div>
+    </div>
+
     <div class="action-grid">
       <div class="action-card" onclick="abrirBuscar('entregar')"><div class="action-ico">📦</div><div class="action-lbl">Entregar material</div><div class="action-desc">Tengo material para dar o vender</div></div>
       <div class="action-card" onclick="abrirBuscar('comprar-producto')"><div class="action-ico">🛍️</div><div class="action-lbl">Comprar productos</div><div class="action-desc">Busco productos hechos con reciclado</div></div>
@@ -1075,6 +1099,116 @@ function fillPerfil(){
 }
 
 function openHistCal(i){document.getElementById('cal-sub').textContent='Calificá este intercambio';openCal();sel=null}
+
+// ═══ BUSCAR TOPBAR ═══
+let mainSearchTimer=null, topbarCoords=null
+
+function onMainSearch(val){
+  const btn=document.getElementById('ir-btn')
+  const sug=document.getElementById('main-sug')
+  if(!val||val.length<2){
+    if(btn) btn.style.display='none'
+    if(sug) sug.style.display='none'
+    topbarCoords=null
+    // Reset pins
+    rolFilter='todo'
+    document.querySelectorAll('.rol-chip').forEach(c=>c.className='rol-chip')
+    document.querySelectorAll('.rol-chip')[0].classList.add('rc-todo')
+    renderPins()
+    return
+  }
+  if(btn) btn.style.display='flex'
+  clearTimeout(mainSearchTimer)
+  mainSearchTimer=setTimeout(()=>fetchMainSugerencias(val),350)
+}
+
+function fetchMainSugerencias(query){
+  const sug=document.getElementById('main-sug')
+  if(!sug) return
+  // Buscar en datos locales primero
+  const q=query.toLowerCase()
+  const localMatches=DATA.filter(d=>
+    d.nombre.toLowerCase().includes(q)||
+    d.zona.toLowerCase().includes(q)||
+    d.desc.toLowerCase().includes(q)
+  )
+  // Buscar direcciones en Nominatim
+  fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(query+' Buenos Aires')+'&format=json&limit=3&countrycodes=ar&addressdetails=1',{headers:{'Accept-Language':'es'}})
+    .then(r=>r.json())
+    .then(data=>{
+      let html=''
+      // Primero mostrar resultados locales
+      if(localMatches.length){
+        html+=localMatches.slice(0,2).map(d=>`
+          <div onclick="selMainResult(${d.id})" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:.5px solid #F2F6F2;transition:background .1s" onmouseover="this.style.background='#F2F6F2'" onmouseout="this.style.background=''">
+            <div style="width:32px;height:32px;border-radius:50%;background:${C[d.tipo]||'#888'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">${ini(d.nombre)}</div>
+            <div><div style="font-size:13px;font-weight:600;color:#1A2420">${d.nombre}</div><div style="font-size:11px;color:#9AABA5">${d.zona} · ${RL[d.tipo]}</div></div>
+          </div>`).join('')
+      }
+      // Luego mostrar direcciones
+      if(data&&data.length){
+        html+=data.slice(0,3).map(d=>{
+          const main=d.address?.road||d.display_name.split(',')[0]
+          const num=d.address?.house_number?(' '+d.address.house_number):''
+          const barrio=d.address?.suburb||d.address?.neighbourhood||d.address?.city_district||''
+          return `<div onclick="selMainAddr('${(main+num+', '+barrio).replace(/'/g,"\'")}',${d.lat},${d.lon})" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:.5px solid #F2F6F2;transition:background .1s" onmouseover="this.style.background='#F2F6F2'" onmouseout="this.style.background=''">
+            <div style="font-size:20px;flex-shrink:0">📍</div>
+            <div><div style="font-size:13px;font-weight:600;color:#1A2420">${main+num}</div><div style="font-size:11px;color:#9AABA5">${barrio||'Buenos Aires'}</div></div>
+          </div>`
+        }).join('')
+      }
+      if(html){sug.innerHTML=html;sug.style.display='block'}
+      else sug.style.display='none'
+    }).catch(()=>{
+      // Solo mostrar locales si falla la red
+      if(localMatches.length){
+        sug.innerHTML=localMatches.slice(0,3).map(d=>`
+          <div onclick="selMainResult(${d.id})" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:.5px solid #F2F6F2" onmouseover="this.style.background='#F2F6F2'" onmouseout="this.style.background=''">
+            <div style="width:32px;height:32px;border-radius:50%;background:${C[d.tipo]||'#888'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">${ini(d.nombre)}</div>
+            <div><div style="font-size:13px;font-weight:600;color:#1A2420">${d.nombre}</div><div style="font-size:11px;color:#9AABA5">${d.zona} · ${RL[d.tipo]}</div></div>
+          </div>`).join('')
+        sug.style.display='block'
+      }
+    })
+}
+
+function selMainResult(id){
+  const d=DATA.find(x=>x.id===id);if(!d)return
+  document.getElementById('main-sug').style.display='none'
+  if(lmap) lmap.setView([d.lat,d.lng],16)
+  setTimeout(()=>abrirPunto(id),400)
+}
+
+function selMainAddr(addr,lat,lng){
+  document.getElementById('map-search').value=addr
+  document.getElementById('main-sug').style.display='none'
+  topbarCoords={lat:parseFloat(lat),lng:parseFloat(lng)}
+  if(lmap) lmap.setView([parseFloat(lat),parseFloat(lng)],16)
+  // Add temp marker
+  if(window._tempMarker) lmap.removeLayer(window._tempMarker)
+  const icon=L.divIcon({html:'<div style="width:16px;height:16px;border-radius:50%;background:#E8913A;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)"></div>',className:'',iconSize:[16,16],iconAnchor:[8,8]})
+  window._tempMarker=L.marker([parseFloat(lat),parseFloat(lng)],{icon}).addTo(lmap)
+}
+
+function irDesdeTopbar(){
+  const val=document.getElementById('map-search')?.value?.trim()
+  if(!val){return}
+  if(topbarCoords){if(lmap)lmap.setView([topbarCoords.lat,topbarCoords.lng],16);return}
+  showToast('Buscando...')
+  fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(val+' Buenos Aires')+'&format=json&limit=1&countrycodes=ar',{headers:{'Accept-Language':'es'}})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data&&data.length){selMainAddr(val,data[0].lat,data[0].lon);showToast('✓ Encontrado')}
+      else showToast('No encontramos esa dirección')
+    }).catch(()=>showToast('Error de conexión'))
+}
+
+// Cerrar sugerencias al tocar afuera
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#map-search')&&!e.target.closest('#main-sug')){
+    const s=document.getElementById('main-sug');if(s)s.style.display='none'
+  }
+})
 
 // ═══ BUSCAR EN MAPA ═══
 function buscarEnMapa(val){
