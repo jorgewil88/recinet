@@ -282,9 +282,16 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
 <!-- MAPA -->
 <div id="s-mapa" class="screen">
   <div class="tbar">
-    <div class="app-brand" onclick="openGaiaPanel()" style="cursor:pointer">Gaia<span>rise</span></div>
+    <button onclick="openGaiaPanel()" style="display:flex;align-items:center;gap:8px;background:#F2F6F2;border:1.5px solid #E2E8E2;border-radius:10px;padding:5px 10px 5px 8px;cursor:pointer;font-family:inherit">
+      <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
+        <rect y="0" width="16" height="2" rx="1" fill="#1A2420"/>
+        <rect y="6" width="16" height="2" rx="1" fill="#1A2420"/>
+        <rect y="12" width="16" height="2" rx="1" fill="#1A2420"/>
+      </svg>
+      <div class="app-brand" style="margin:0">Gaia<span>rise</span></div>
+    </button>
     <div class="tsearch"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#9AABA5" stroke-width="1.4"/><path d="M9 9l3.5 3.5" stroke="#9AABA5" stroke-width="1.4" stroke-linecap="round"/></svg><input id="map-search" placeholder="Explorá el mapa..." style="border:none;outline:none;background:transparent;font-size:13px;color:#1A2420;width:100%;font-family:inherit" oninput="buscarEnMapa(this.value)"></div>
-    <button onclick="goTo('aprender')" style="width:38px;height:38px;border-radius:50%;border:1.5px solid #E2E8E2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📚</button><div class="av" id="tav" onclick="goTo('perfil')">?</div>
+    <div class="av" id="tav" onclick="goTo('perfil')">?</div>
   </div>
   <div class="rol-bar">
     <button class="rol-chip rc-todo" onclick="setRol('todo',this,'rc-todo')">Todo</button>
@@ -622,6 +629,11 @@ function initMap(){
     lmap=L.map('leaflet-map',{center:[-34.6037,-58.3816],zoom:13,zoomControl:true,attributionControl:false})
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(lmap)
     renderPins()
+    // Init Places API if Google is loaded
+    if(window.google&&window.google.maps&&window.google.maps.places){
+      window.placesAutoSvc=new google.maps.places.AutocompleteService()
+      window.placesSvc=new google.maps.places.PlacesService(document.createElement('div'))
+    }
   },50)
   // Pedir ubicación inmediatamente, independiente del mapa
   if(navigator.geolocation){
@@ -757,11 +769,14 @@ function abrirBuscar(tipo){
       <div style="font-size:11px;font-weight:700;color:#5A6B65;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Tu dirección</div>
       <div class="addr-box" id="addr-box">
         <div class="addr-pin">📍</div>
-        <input class="addr-inp" id="addr-inp" placeholder="Escribí tu dirección o barrio..." autocomplete="off" oninput="onAddrInput(this.value)">
+        <input class="addr-inp" id="addr-inp" placeholder="Escribí tu dirección..." autocomplete="off" oninput="onAddrInput(this.value)" onkeydown="if(event.key==='Enter')irADireccion()">
         <div class="addr-sug" id="addr-sug"></div>
       </div>
       <div class="addr-hint">Ej: Av. Corrientes 1234 · o usá tu ubicación actual</div>
-      <button onclick="usarUbicacion()" style="width:100%;height:42px;border-radius:10px;border:1.5px solid #2D9E6B;background:#E2F5EC;color:#1A6B49;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:6px">🎯 Usar mi ubicación actual</button>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button onclick="irADireccion()" style="flex:1;height:42px;border-radius:10px;background:linear-gradient(135deg,#2D9E6B,#1A6B49);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">Ir →</button>
+        <button onclick="usarUbicacion()" style="height:42px;padding:0 14px;border-radius:10px;border:1.5px solid #2D9E6B;background:#E2F5EC;color:#1A6B49;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap">🎯 Mi ubicación</button>
+      </div>
       <div style="font-size:11px;font-weight:700;color:#5A6B65;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${cfg.matLabel} <span style="font-weight:400;text-transform:none">(opcional)</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px" id="mat-chips">${matOpts}</div>
       <button class="buscar-btn" id="buscar-btn" onclick="buscar('${cfg.tipoFiltro}')" ${userCoords?'':'disabled'}>🔍 Buscar cerca mío</button>
@@ -777,18 +792,71 @@ function onAddrInput(val){
   addrTimeout=setTimeout(()=>showBarriosSugerencias(val),300)
 }
 
+const BARRIOS={Palermo:[-34.588,-58.414],Belgrano:[-34.558,-58.450],Flores:[-34.628,-58.464],Boedo:[-34.640,-58.424],'San Telmo':[-34.620,-58.368],'Villa Crespo':[-34.599,-58.442],Caballito:[-34.620,-58.440],Recoleta:[-34.587,-58.393],Almagro:[-34.608,-58.420],Barracas:[-34.650,-58.390],Mataderos:[-34.662,-58.513],'Villa Urquiza':[-34.572,-58.480],Colegiales:[-34.572,-58.446],Devoto:[-34.600,-58.502],Núñez:[-34.545,-58.462],Caballito:[-34.620,-58.440],'Parque Patricios':[-34.643,-58.398],'Villa del Parque':[-34.607,-58.490]}
+
 function showBarriosSugerencias(query){
-  const barrios={Palermo:[-34.588,-58.414],Belgrano:[-34.558,-58.450],Flores:[-34.628,-58.464],Boedo:[-34.640,-58.424],'San Telmo':[-34.620,-58.368],'Villa Crespo':[-34.599,-58.442],Caballito:[-34.620,-58.440],Recoleta:[-34.587,-58.393],Almagro:[-34.608,-58.420],Barracas:[-34.650,-58.390],Mataderos:[-34.662,-58.513],Palermo:[-34.588,-58.414],'Villa Urquiza':[-34.572,-58.480],Colegiales:[-34.572,-58.446],Devoto:[-34.600,-58.502],Núñez:[-34.545,-58.462]}
-  const q=query.toLowerCase()
-  const matches=Object.keys(barrios).filter(b=>b.toLowerCase().includes(q))
   const sug=document.getElementById('addr-sug');if(!sug)return
+  const q=query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+  
+  // Try Places API first if available
+  if(window.placesAutoSvc){
+    window.placesAutoSvc.getPlacePredictions(
+      {input:query+' Buenos Aires Argentina',componentRestrictions:{country:'ar'},types:['address','geocode']},
+      (preds,status)=>{
+        if(status==='OK'&&preds&&preds.length){
+          sug.innerHTML=preds.slice(0,4).map(p=>`
+            <div class="addr-sug-item" onclick="getPlaceLatLng('${p.place_id}','${p.description.replace(/'/g,"\'")}')">
+              <div style="font-size:18px">📍</div>
+              <div><div class="addr-sug-main">${p.structured_formatting.main_text}</div>
+              <div class="addr-sug-sub">${p.structured_formatting.secondary_text||''}</div></div>
+            </div>`).join('')
+          sug.style.display='block'
+        } else {
+          showBarriosFallback(q,sug)
+        }
+      }
+    )
+  } else {
+    showBarriosFallback(q,sug)
+  }
+}
+
+function showBarriosFallback(q,sug){
+  const matches=Object.keys(BARRIOS).filter(b=>b.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q))
   if(!matches.length){sug.style.display='none';return}
-  sug.innerHTML=matches.slice(0,4).map(b=>`
-    <div class="addr-sug-item" onclick="selAddr('${b}, CABA',${barrios[b][0]},${barrios[b][1]})">
+  sug.innerHTML=matches.slice(0,5).map(b=>`
+    <div class="addr-sug-item" onclick="selAddr('${b}, CABA',${BARRIOS[b][0]},${BARRIOS[b][1]})">
       <div style="font-size:18px">📍</div>
       <div><div class="addr-sug-main">${b}</div><div class="addr-sug-sub">CABA, Buenos Aires</div></div>
     </div>`).join('')
   sug.style.display='block'
+}
+
+function getPlaceLatLng(placeId, desc){
+  if(!window.placesSvc){showToast('Seleccionando...');selAddr(desc,-34.6037,-58.3816);return}
+  window.placesSvc.getDetails({placeId,fields:['geometry','formatted_address']},(place,status)=>{
+    if(status==='OK'&&place.geometry)
+      selAddr(place.formatted_address,place.geometry.location.lat(),place.geometry.location.lng())
+    else selAddr(desc,-34.6037,-58.3816)
+  })
+}
+
+function irADireccion(){
+  const val=document.getElementById('addr-inp')?.value?.trim()
+  if(!val){showToast('Escribí una dirección primero');return}
+  if(userCoords&&lmap){lmap.setView([userCoords.lat,userCoords.lng],15);document.getElementById('addr-sug').style.display='none';return}
+  // Geocode the address
+  const q=encodeURIComponent(val+' Buenos Aires Argentina')
+  fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`)
+    .then(r=>r.json())
+    .then(data=>{
+      if(data&&data.length){
+        const lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon)
+        selAddr(data[0].display_name,lat,lng)
+        if(lmap) lmap.setView([lat,lng],15)
+      } else showToast('No encontramos esa dirección')
+    })
+    .catch(()=>showToast('Error buscando la dirección'))
 }
 
 function selAddr(addr,lat,lng){
@@ -1019,6 +1087,13 @@ function buscarEnMapa(val){
   if(match.length&&lmap) lmap.setView([match[0].lat,match[0].lng],14)
 }
 
+function initPlacesAPI(){
+  if(window.google&&window.google.maps&&window.google.maps.places){
+    window.placesAutoSvc=new google.maps.places.AutocompleteService()
+    window.placesSvc=new google.maps.places.PlacesService(document.createElement('div'))
+  }
+}
+
 // ═══ MISION ═══
 function openMision(){document.getElementById('mision-modal').classList.add('on')}
 function openGaiaPanel(){document.getElementById('mision-modal').classList.add('on')}
@@ -1032,5 +1107,6 @@ sb.auth.onAuthStateChange(async(_,session)=>{
   if(session&&!user.email){await loadUserProfile(session.user);initMap();showToast('¡Bienvenido/a a Gaiarise! 🌱')}
 })
 </script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBppqI_ghSVG4CxbeG2pznwsVFUM3U8paY&libraries=places" async defer onload="initPlacesAPI()"></script>
 </body>
 </html>
