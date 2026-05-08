@@ -283,7 +283,7 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
 <div id="s-mapa" class="screen">
   <div class="tbar">
     <div class="app-brand" onclick="openGaiaPanel()" style="cursor:pointer">Gaia<span>rise</span></div>
-    <div class="tsearch"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#9AABA5" stroke-width="1.4"/><path d="M9 9l3.5 3.5" stroke="#9AABA5" stroke-width="1.4" stroke-linecap="round"/></svg> Explorá el mapa...</div>
+    <div class="tsearch"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#9AABA5" stroke-width="1.4"/><path d="M9 9l3.5 3.5" stroke="#9AABA5" stroke-width="1.4" stroke-linecap="round"/></svg><input id="map-search" placeholder="Explorá el mapa..." style="border:none;outline:none;background:transparent;font-size:13px;color:#1A2420;width:100%;font-family:inherit" oninput="buscarEnMapa(this.value)"></div>
     <button onclick="goTo('aprender')" style="width:38px;height:38px;border-radius:50%;border:1.5px solid #E2E8E2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📚</button><div class="av" id="tav" onclick="goTo('perfil')">?</div>
   </div>
   <div class="rol-bar">
@@ -447,6 +447,13 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
       <div class="tcard" data-t="productor" onclick="selType(this)"><div class="tcard-ico">🛍️</div><div class="tcard-lbl">Productor</div><div class="tcard-sub">Vendo producto</div></div>
       <div class="tcard" data-t="comprador" onclick="selType(this)"><div class="tcard-ico">🛒</div><div class="tcard-lbl">Comprador</div><div class="tcard-sub">Busco material</div></div>
     </div>
+    <div class="fld">
+      <label class="flbl">Tu ubicación en el mapa</label>
+      <button onclick="usarUbicacionPublicacion()" id="pub-loc-btn" style="width:100%;height:42px;border-radius:10px;border:1.5px solid #E2E8E2;background:#F2F6F2;color:#5A6B65;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px">
+        🎯 Usar mi ubicación actual
+      </button>
+      <div id="pub-loc-txt" style="font-size:11px;color:#9AABA5;text-align:center;margin-bottom:12px">Tu punto aparecerá en el mapa con tu ubicación real</div>
+    </div>
     <div class="fld"><label class="flbl">Foto (opcional)</label>
       <div class="foto-area" id="foto-drop" onclick="document.getElementById('pub-foto-inp').click()">
         <div style="font-size:28px">📷</div>
@@ -609,7 +616,6 @@ function openActionModal(){document.getElementById('overlay').classList.add('on'
 // ═══ MAPA LEAFLET ═══
 function initMap(){
   if(lmap) return
-  // Mostrar pantalla mapa primero para que el div tenga tamaño
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'))
   document.getElementById('s-mapa').classList.add('on')
   
@@ -622,6 +628,21 @@ function initMap(){
     })
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(lmap)
     renderPins()
+    // Centrar en ubicación real del usuario
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const lat=pos.coords.latitude, lng=pos.coords.longitude
+        lmap.setView([lat,lng],14)
+        // Agregar marcador de ubicación propia
+        const miIcon=L.divIcon({
+          html:`<div style="width:20px;height:20px;border-radius:50%;background:#378ADD;border:3px solid #fff;box-shadow:0 0 0 4px rgba(55,138,221,.3)"></div>`,
+          className:'',iconSize:[20,20],iconAnchor:[10,10]
+        })
+        L.marker([lat,lng],{icon:miIcon,zIndexOffset:1000}).addTo(lmap).bindPopup('📍 Estás acá')
+      }, ()=>{
+        // Si rechaza el permiso, queda centrado en CABA
+      })
+    }
   },50)
 }
 
@@ -894,6 +915,29 @@ function contactWA(){const tel=sel?.tel||'';const n=(sel?.nombre||'').split(' ')
 function contactEmail(){if(sel?.email)window.open(`mailto:${sel.email}?subject=Contacto desde Gaiarise`);else showToast('Sin email cargado')}
 
 // ═══ PUBLICAR ═══
+let pubCoords=null
+
+function usarUbicacionPublicacion(){
+  const btn=document.getElementById('pub-loc-btn')
+  const txt=document.getElementById('pub-loc-txt')
+  if(!navigator.geolocation){showToast('Tu navegador no soporta geolocalización');return}
+  btn.textContent='Obteniendo ubicación...'
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      pubCoords={lat:pos.coords.latitude,lng:pos.coords.longitude}
+      btn.innerHTML='✓ Ubicación obtenida'
+      btn.style.borderColor='#2D9E6B'
+      btn.style.background='#E2F5EC'
+      btn.style.color='#1A6B49'
+      if(txt) txt.textContent=`📍 ${pubCoords.lat.toFixed(4)}, ${pubCoords.lng.toFixed(4)}`
+      showToast('Ubicación obtenida ✓')
+    },
+    ()=>{
+      btn.innerHTML='🎯 Usar mi ubicación actual'
+      showToast('No pudimos obtener tu ubicación')
+    }
+  )
+}
 function selType(el){document.querySelectorAll('#tgrid .tcard').forEach(c=>c.classList.remove('on'));el.classList.add('on');pubType=el.dataset.t}
 function toggleFree(){isFree=!isFree;document.getElementById('freebox').classList.toggle('on',isFree);document.getElementById('freebox').textContent=isFree?'✓':'';document.getElementById('price-fld').style.display=isFree?'none':'block'}
 function doPublish(){
@@ -901,11 +945,11 @@ function doPublish(){
   const desc=document.getElementById('pub-desc').value.trim(),price=document.getElementById('pub-price').value.trim(),phone=document.getElementById('pub-phone').value.trim()
   if(!desc){showToast('Escribí una descripción');return}
   if(!mats.length){showToast('Elegí al menos un material');return}
-  DATA.push({id:Date.now(),tipo:pubType,nombre:user.nombre||'Vos',zona:user.zona||'CABA',mats,desc,precio:isFree?'Gratis':(price?`$${price}/kg`:'—'),tel:phone,email:user.email,horario:user.horarioTxt||'',foto:pubFotoData,tomada:false,rating:5,lat:-34.60+(Math.random()-.5)*.1,lng:-58.42+(Math.random()-.5)*.15})
+  DATA.push({id:Date.now(),tipo:pubType,nombre:user.nombre||'Vos',zona:user.zona||'CABA',mats,desc,precio:isFree?'Gratis':(price?`$${price}/kg`:'—'),tel:phone,email:user.email,horario:user.horarioTxt||'',foto:pubFotoData,tomada:false,rating:5,lat:pubCoords?pubCoords.lat:-34.60+(Math.random()-.5)*.1,lng:pubCoords?pubCoords.lng:-58.42+(Math.random()-.5)*.15})
   closeAll();renderPins();showToast('¡Publicado en Gaiarise! 🌱')
   document.getElementById('pub-desc').value='';document.getElementById('pub-price').value='';isFree=false
   document.getElementById('freebox').classList.remove('on');document.getElementById('freebox').textContent='';document.getElementById('price-fld').style.display='block'
-  pubFotoData=null;document.getElementById('foto-drop').innerHTML='<div style="font-size:28px">📷</div><div style="font-size:12px;font-weight:600;color:#5A6B65">Tocá para subir foto</div>'
+  pubFotoData=null;document.getElementById('foto-drop').innerHTML='<div style="font-size:28px">📷</div><div style="font-size:12px;font-weight:600;color:#5A6B65">Tocá para subir foto</div>';pubCoords=null;const pb=document.getElementById('pub-loc-btn');if(pb){pb.innerHTML='🎯 Usar mi ubicación actual';pb.style.borderColor='#E2E8E2';pb.style.background='#F2F6F2';pb.style.color='#5A6B65'}
   document.querySelectorAll('#tgrid .tcard').forEach((c,i)=>c.classList.toggle('on',i===0));pubType='generador'
 }
 
@@ -963,6 +1007,23 @@ function fillPerfil(){
 }
 
 function openHistCal(i){document.getElementById('cal-sub').textContent='Calificá este intercambio';openCal();sel=null}
+
+// ═══ BUSCAR EN MAPA ═══
+function buscarEnMapa(val){
+  if(!val||val.length<2){rolFilter='todo';document.querySelectorAll('.rol-chip').forEach(c=>c.className='rol-chip');document.querySelectorAll('.rol-chip')[0].classList.add('rc-todo');renderPins();return}
+  const q=val.toLowerCase()
+  const match=DATA.filter(d=>d.nombre.toLowerCase().includes(q)||d.zona.toLowerCase().includes(q)||d.desc.toLowerCase().includes(q))
+  if(!lmap) return
+  mapMarkers.forEach(m=>lmap.removeLayer(m));mapMarkers=[]
+  match.forEach(d=>{
+    const color=d.tomada?'#9AABA5':(C[d.tipo]||'#888')
+    const icon=L.divIcon({html:`<div style="width:30px;height:30px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.9)"></div></div>`,className:'',iconSize:[30,30],iconAnchor:[15,15]})
+    const m=L.marker([d.lat,d.lng],{icon}).addTo(lmap)
+    m.on('click',()=>abrirPunto(d.id))
+    mapMarkers.push(m)
+  })
+  if(match.length&&lmap) lmap.setView([match[0].lat,match[0].lng],14)
+}
 
 // ═══ MISION ═══
 function openMision(){document.getElementById('mision-modal').classList.add('on')}
