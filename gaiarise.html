@@ -282,14 +282,7 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
 <!-- MAPA -->
 <div id="s-mapa" class="screen">
   <div class="tbar">
-    <button onclick="openGaiaPanel()" style="display:flex;align-items:center;gap:8px;background:#F2F6F2;border:1.5px solid #E2E8E2;border-radius:10px;padding:5px 10px 5px 8px;cursor:pointer;font-family:inherit">
-      <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
-        <rect y="0" width="16" height="2" rx="1" fill="#1A2420"/>
-        <rect y="6" width="16" height="2" rx="1" fill="#1A2420"/>
-        <rect y="12" width="16" height="2" rx="1" fill="#1A2420"/>
-      </svg>
-      <div class="app-brand" style="margin:0">Gaia<span>rise</span></div>
-    </button>
+    <button onclick="openGaiaPanel()" style="display:flex;align-items:center;background:transparent;border:1.5px solid #2D9E6B;border-radius:10px;padding:5px 12px;cursor:pointer;font-family:inherit"><div class="app-brand" style="margin:0">Gaia<span>rise</span></div></button>
     <div class="tsearch"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#9AABA5" stroke-width="1.4"/><path d="M9 9l3.5 3.5" stroke="#9AABA5" stroke-width="1.4" stroke-linecap="round"/></svg><input id="map-search" placeholder="Explorá el mapa..." style="border:none;outline:none;background:transparent;font-size:13px;color:#1A2420;width:100%;font-family:inherit" oninput="buscarEnMapa(this.value)"></div>
     <div class="av" id="tav" onclick="goTo('perfil')">?</div>
   </div>
@@ -769,17 +762,18 @@ function abrirBuscar(tipo){
       <div style="font-size:11px;font-weight:700;color:#5A6B65;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Tu dirección</div>
       <div class="addr-box" id="addr-box">
         <div class="addr-pin">📍</div>
-        <input class="addr-inp" id="addr-inp" placeholder="Escribí tu dirección..." autocomplete="off" oninput="onAddrInput(this.value)" onkeydown="if(event.key==='Enter')irADireccion()">
+        <input class="addr-inp" id="addr-inp" placeholder="Ej: Av. Corrientes 1234, Palermo..." autocomplete="off"
+          oninput="onAddrInput(this.value)"
+          onkeydown="if(event.key==='Enter'){irADireccion();this.blur()}">
         <div class="addr-sug" id="addr-sug"></div>
       </div>
-      <div class="addr-hint">Ej: Av. Corrientes 1234 · o usá tu ubicación actual</div>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button onclick="irADireccion()" style="flex:1;height:42px;border-radius:10px;background:linear-gradient(135deg,#2D9E6B,#1A6B49);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">Ir →</button>
-        <button onclick="usarUbicacion()" style="height:42px;padding:0 14px;border-radius:10px;border:1.5px solid #2D9E6B;background:#E2F5EC;color:#1A6B49;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap">🎯 Mi ubicación</button>
+      <div style="display:flex;gap:8px;margin-bottom:16px;margin-top:10px">
+        <button onclick="irADireccion()" style="flex:1;height:44px;border-radius:10px;background:linear-gradient(135deg,#2D9E6B,#1A6B49);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Ir →</button>
+        <button onclick="usarUbicacion()" style="height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #2D9E6B;background:#E2F5EC;color:#1A6B49;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🎯 Mi ubicación</button>
       </div>
       <div style="font-size:11px;font-weight:700;color:#5A6B65;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${cfg.matLabel} <span style="font-weight:400;text-transform:none">(opcional)</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px" id="mat-chips">${matOpts}</div>
-      <button class="buscar-btn" id="buscar-btn" onclick="buscar('${cfg.tipoFiltro}')" ${userCoords?'':'disabled'}>🔍 Buscar cerca mío</button>
+      <button class="buscar-btn" id="buscar-btn" onclick="buscar('${cfg.tipoFiltro}')">🔍 Buscar cerca mío</button>
     </div>
     <div id="resultados"></div>
   `
@@ -844,26 +838,38 @@ function getPlaceLatLng(placeId, desc){
 function irADireccion(){
   const val=document.getElementById('addr-inp')?.value?.trim()
   if(!val){showToast('Escribí una dirección primero');return}
-  if(userCoords&&lmap){lmap.setView([userCoords.lat,userCoords.lng],15);document.getElementById('addr-sug').style.display='none';return}
-  // Geocode the address
-  const q=encodeURIComponent(val+' Buenos Aires Argentina')
-  fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`)
+  if(userCoords){
+    const tipo=document.getElementById('buscar-btn')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]
+    if(tipo) buscar(tipo)
+    return
+  }
+  showToast('Buscando dirección...')
+  const q=encodeURIComponent(val+', Buenos Aires, Argentina')
+  fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=3&countrycodes=ar',{headers:{'Accept-Language':'es'}})
     .then(r=>r.json())
     .then(data=>{
       if(data&&data.length){
         const lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon)
-        selAddr(data[0].display_name,lat,lng)
-        if(lmap) lmap.setView([lat,lng],15)
-      } else showToast('No encontramos esa dirección')
+        userCoords={lat,lng}
+        const sug=document.getElementById('addr-sug');if(sug)sug.style.display='none'
+        const tipo=document.getElementById('buscar-btn')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]
+        if(tipo) buscar(tipo)
+        showToast('✓ Dirección encontrada')
+      } else showToast('No encontramos esa dirección. Probá con el barrio.')
     })
-    .catch(()=>showToast('Error buscando la dirección'))
+    .catch(()=>showToast('Error de conexión'))
 }
 
 function selAddr(addr,lat,lng){
   const inp=document.getElementById('addr-inp');if(inp)inp.value=addr
   const sug=document.getElementById('addr-sug');if(sug)sug.style.display='none'
   userCoords={lat,lng}
-  const btn=document.getElementById('buscar-btn');if(btn){btn.disabled=false;btn.style.opacity='1'}
+  // Auto-run buscar after selecting address
+  setTimeout(()=>{
+    const tf=document.getElementById('buscar-btn')?.getAttribute('onclick')
+    const tipo=tf?.match(/'(\w+)'/)?.[1]
+    if(tipo) buscar(tipo)
+  },300)
 }
 
 function usarUbicacion(){
