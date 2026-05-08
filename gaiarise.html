@@ -60,11 +60,11 @@ body{font-family:system-ui,sans-serif;background:#F2F6F2;color:#1A2420;height:10
 .leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .fab{position:absolute;bottom:20px;right:16px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#2D9E6B,#1A6B49);color:#fff;font-size:28px;border:none;cursor:pointer;z-index:1000;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(45,158,107,.4)}
 /* OVERLAY + SHEETS */
-.overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:30;display:none}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:1500;display:none}
 .overlay.on{display:block}
-.sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:40;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:92%;overflow-y:auto}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:2000;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:92%;overflow-y:auto}
 .sheet.on{transform:translateY(0)}
-.action-modal{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:50;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.action-modal{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:2000;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
 .action-modal.on{transform:translateY(0)}
 .handle{width:36px;height:4px;background:#E2E8E2;border-radius:2px;margin:14px auto 0}
 .sbody{padding:16px 20px 36px}
@@ -196,7 +196,7 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
 
 <!-- AUTH -->
 <div id="s-auth" class="screen on">
-  <div class="logo-box" onclick="openMision()" style="cursor:pointer"><svg viewBox="0 0 40 40" fill="none" width="40" height="40"><path d="M20 8C14 8 8 14 8 20c0 4 2 7.5 5 9.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M20 8c6 0 12 6 12 12 0 4-2 7.5-5 9.5" stroke="rgba(255,255,255,.6)" stroke-width="2.2" stroke-linecap="round"/><path d="M20 32V20M20 20l-5-5M20 20l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="8" r="3" fill="#fff" opacity=".8"/></svg></div>
+  <div class="logo-box"><svg viewBox="0 0 40 40" fill="none" width="40" height="40"><path d="M20 8C14 8 8 14 8 20c0 4 2 7.5 5 9.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M20 8c6 0 12 6 12 12 0 4-2 7.5-5 9.5" stroke="rgba(255,255,255,.6)" stroke-width="2.2" stroke-linecap="round"/><path d="M20 32V20M20 20l-5-5M20 20l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="8" r="3" fill="#fff" opacity=".8"/></svg></div>
   <div class="logo-name">Gaia<span>rise</span></div>
   <div class="logo-sub">La sostenibilidad real no empieza en grandes sistemas.<br>Empieza en personas, comunidades y acciones locales<br>que generan un impacto verdadero.</div>
   <div id="login-form">
@@ -282,7 +282,7 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
 <!-- MAPA -->
 <div id="s-mapa" class="screen">
   <div class="tbar">
-    <div class="app-brand">Gaia<span>rise</span></div>
+    <div class="app-brand" onclick="openGaiaPanel()" style="cursor:pointer">Gaia<span>rise</span></div>
     <div class="tsearch" onclick="goTo('aprender')" style="cursor:pointer"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#9AABA5" stroke-width="1.4"/><path d="M9 9l3.5 3.5" stroke="#9AABA5" stroke-width="1.4" stroke-linecap="round"/></svg> Explorá el mapa...</div>
     <button onclick="goTo('aprender')" style="width:38px;height:38px;border-radius:50%;border:1.5px solid #E2E8E2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📚</button><div class="av" id="tav" onclick="goTo('perfil')">?</div>
   </div>
@@ -502,27 +502,67 @@ textarea.finp{height:76px;padding:11px 14px;resize:none}
 
 <div id="toast"></div>
 
-<!-- MISION MODAL -->
+<!-- GAIA PANEL -->
 <div class="mision-wrap" id="mision-modal" onclick="if(event.target===this)closeMision()">
   <div class="mision-sheet">
-    <div class="mision-logo"><svg viewBox="0 0 40 40" fill="none" width="32" height="32"><path d="M20 8C14 8 8 14 8 20c0 4 2 7.5 5 9.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M20 8c6 0 12 6 12 12 0 4-2 7.5-5 9.5" stroke="rgba(255,255,255,.6)" stroke-width="2.2" stroke-linecap="round"/><path d="M20 32V20M20 20l-5-5M20 20l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="mision-title">Gaia<span>rise</span></div>
-    <div class="mision-tagline">La sostenibilidad real no empieza en grandes sistemas.<br>Empieza en vos.</div>
-    <div class="mision-body">
-      <p>La mayoría de las iniciativas de reciclaje quedan en intenciones. El material existe, las personas que lo necesitan también — pero <strong>nunca se encuentran</strong>.</p>
-      <br>
-      <p>Gaiarise nació para cambiar eso. Conectamos a <strong>generadores, recicladores, productores y compradores</strong> en un mismo mapa, en tiempo real, en tu barrio.</p>
-      <br>
-      <p>Porque la sostenibilidad real no empieza en grandes sistemas. Empieza en <strong>personas, comunidades y acciones locales</strong> que generan un impacto verdadero.</p>
-      <br>
-      <p>Cada kg que reciclás evita que llegue al relleno sanitario. Cada conexión que hacés construye una economía circular real. <strong>Cada acción cuenta.</strong></p>
+    <div class="handle" style="margin-bottom:16px"></div>
+    <div style="font-size:20px;font-weight:800;color:#1A2420;margin-bottom:3px">Gaia<span style="color:#2D9E6B">rise</span></div>
+
+    <div style="font-size:13px;color:#5A6B65;line-height:1.8;margin-bottom:22px">
+      El cambio real no lo hacen los grandes sistemas.<br>
+      Lo hacen <strong style="color:#1A2420">vos, tu barrio y tu comunidad</strong> — cada vez que reciclás, conectás o aprendés.<br><br>
+      Acá encontrás a quienes tienen lo que necesitás, y a quienes necesitan lo que tenés.<br>
+      <strong style="color:#2D9E6B">Cada acción cuenta. Cada kg importa.</strong>
     </div>
-    <div class="mision-stats">
-      <div class="mision-stat"><div class="mision-stat-num">4</div><div class="mision-stat-lbl">roles conectados</div></div>
-      <div class="mision-stat"><div class="mision-stat-num">♻️</div><div class="mision-stat-lbl">economía circular</div></div>
-      <div class="mision-stat"><div class="mision-stat-num">🌱</div><div class="mision-stat-lbl">impacto real</div></div>
+
+    <div style="font-size:12px;font-weight:700;color:#9AABA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Aprender y actuar</div>
+
+    <!-- COMPOSTAR -->
+    <div style="background:#F2F6F2;border-radius:14px;padding:14px;margin-bottom:10px;border:.5px solid #E2E8E2">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-size:26px">🌿</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1A2420">Compostar en casa</div>
+          <div style="font-size:11px;color:#5A6B65;margin-top:1px">Convertí residuos orgánicos en abono natural</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="https://www.youtube.com/results?search_query=como+compostar+en+casa+argentina" target="_blank" style="flex:1;height:40px;border-radius:10px;background:#FF0000;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;text-decoration:none">▶ Ver videos</a>
+        <a href="https://listado.mercadolibre.com.ar/compostera" target="_blank" style="flex:1;height:40px;border-radius:10px;border:1.5px solid #2D9E6B;background:#E2F5EC;color:#1A6B49;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;text-decoration:none">🛒 Compostera</a>
+      </div>
     </div>
-    <button class="mision-close" onclick="closeMision()">Entendido ✓</button>
+
+    <!-- PAPEL Y CARTON -->
+    <div style="background:#F2F6F2;border-radius:14px;padding:14px;margin-bottom:10px;border:.5px solid #E2E8E2">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-size:26px">📄</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1A2420">Reciclar papel y cartón</div>
+          <div style="font-size:11px;color:#5A6B65;margin-top:1px">Cómo prepararlo y dónde llevarlo</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="https://www.youtube.com/results?search_query=como+reciclar+papel+carton+en+casa" target="_blank" style="flex:1;height:40px;border-radius:10px;background:#FF0000;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;text-decoration:none">▶ Ver videos</a>
+        <a href="https://listado.mercadolibre.com.ar/trituradora-papel-reciclaje" target="_blank" style="flex:1;height:40px;border-radius:10px;border:1.5px solid #2D9E6B;background:#E2F5EC;color:#1A6B49;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;text-decoration:none">🛒 Materiales</a>
+      </div>
+    </div>
+
+    <!-- PLÁSTICO -->
+    <div style="background:#F2F6F2;border-radius:14px;padding:14px;margin-bottom:20px;border:.5px solid #E2E8E2">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-size:26px">♻️</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1A2420">Reciclar plástico</div>
+          <div style="font-size:11px;color:#5A6B65;margin-top:1px">Identificá los tipos y separalos correctamente</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="https://www.youtube.com/results?search_query=como+reciclar+plastico+en+casa+argentina" target="_blank" style="flex:1;height:40px;border-radius:10px;background:#FF0000;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;text-decoration:none">▶ Ver videos</a>
+        <a href="https://listado.mercadolibre.com.ar/reciclado-plastico-herramientas" target="_blank" style="flex:1;height:40px;border-radius:10px;border:1.5px solid #2D9E6B;background:#E2F5EC;color:#1A6B49;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;text-decoration:none">🛒 Materiales</a>
+      </div>
+    </div>
+
+    <button class="mision-close" onclick="closeMision()">Cerrar</button>
   </div>
 </div>
 
@@ -926,6 +966,7 @@ function openHistCal(i){document.getElementById('cal-sub').textContent='Calific�
 
 // ═══ MISION ═══
 function openMision(){document.getElementById('mision-modal').classList.add('on')}
+function openGaiaPanel(){document.getElementById('mision-modal').classList.add('on')}
 function closeMision(){document.getElementById('mision-modal').classList.remove('on')}
 
 // ═══ INIT ═══
